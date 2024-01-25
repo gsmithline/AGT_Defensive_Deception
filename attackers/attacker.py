@@ -33,10 +33,6 @@ class Attacker:
         self.past_actual_utilities = new_past_actual_utilities
 
     def calculate_expected_utility(self, target, defender_strategy, all_strategies):
-        """
-        Calculate the utility of attacking a specific target considering the defender's strategy
-        and the strategies of all attackers (for congestion).
-        """
         R_j = target.reward
         P_j = target.penalty
         c_j = target.congestion_cost
@@ -52,11 +48,6 @@ class Attacker:
         return utility
 
     def optimize_mixed_strategy(self, game):
-        """
-        Optimize the attacker's mixed strategy to maximize expected utility.
-        This method assumes access to the current game state, including the defender's strategy
-        and the strategies of all attackers.
-        """
         # Define the objective function (negative of expected utility to minimize)
         def objective(strategy):
             utilities = np.array([
