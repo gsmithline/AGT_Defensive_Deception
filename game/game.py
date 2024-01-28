@@ -49,12 +49,23 @@ class Game:
             # Calculate new congestion based on attacker strategies
             target.congestion = sum(attacker_strategies.values())
     
+    #should be called after attackers play their strategies
     def calculate_potential_function_value(self):
-        # Calculate expected potential function value based on current game state
-        # Example: Iterate over targets and calculate expected potential function value
+        potential_function_value = 0
+        # Iterate over each target in the game state
+        for target in self.game_state.values():
+            # For each target, iterate over each attacker
+            for attacker_id, attacker in self.attackers.items():
+                # Probability of this attacker targeting this target
+                y_ij = attacker.current_strategy[target.name]
+                # Utility for attacker i when choosing target j
+                # Assuming calculate_expected_utility function calculates U_{ij} for a given target
+                U_ij = attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
+                # Add to the potential function value
+                potential_function_value += y_ij * U_ij
+        self.actual_potential_function_value = potential_function_value
+        return potential_function_value
 
-        pass
-    
 
 
 
