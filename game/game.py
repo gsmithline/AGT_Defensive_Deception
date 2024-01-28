@@ -16,6 +16,7 @@ class Game:
         self.past_potential_function_values = {} #dictionary of past potential function values, key is game state ie. iteration number in game
         self.attacker_strategy_profile = {attacker_id: np.ones(len(targets)) / len(targets) 
                                           for attacker_id in attackers}
+        self.average_potential_for_attacker = None #some scalar value for the potential function
 
 
     def update_game_state(self, new_game_state):
@@ -50,7 +51,7 @@ class Game:
             target.congestion = sum(attacker_strategies.values())
     
     #should be called after attackers play their strategies
-    def calculate_potential_function_value(self):
+    def calculate_potential_function_value(self, game_state):
         potential_function_value = 0
         # Iterate over each target in the game state
         for target in self.game_state.values():
@@ -64,6 +65,8 @@ class Game:
                 # Add to the potential function value
                 potential_function_value += y_ij * U_ij
         self.actual_potential_function_value = potential_function_value
+        self.past_potential_function_values[game_state] = potential_function_value
+        self.average_potential_for_attacker = potential_function_value / len(self.attackers)
         return potential_function_value
 
 

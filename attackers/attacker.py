@@ -67,8 +67,10 @@ class Attacker:
         result = minimize(objective, self.current_strategy, method='SLSQP', bounds=bounds, constraints=cons)
         
         if result.success:
-            game.attacker_strategy_profile[self.attack_id] = result.x
-            self.current_strategy = result.x
+            #normalize strategy
+            self.current_strategy = result.x / np.sum(result.x)
+            game.attacker_strategy_profile[self.attack_id] = self.current_strategy
+
         else:
             print("Optimization failed:", result.message)
 

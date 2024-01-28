@@ -6,12 +6,12 @@ import random
 import numpy
 #this file will be the main file that will run the game
 #Globals
-num_targets = 50
+num_targets = 60
 #random game set up 
 game_rounds = 200
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
-rewards = [random.uniform(10, 20) for i in range(num_targets)]
-penalties = [random.uniform(1, 20) for i in range(num_targets)]
+rewards = [random.uniform(1, 5) for i in range(num_targets)]
+penalties = [random.uniform(1, 5) for i in range(num_targets)]
 #set up game and fill targets, this is what will be updated 
 targets = {}
 for i in range(num_targets):
@@ -24,8 +24,13 @@ initial_beliefs = [random.uniform(1, 10) for i in range(num_targets)]
 
 lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
-attacker = Attacker()
-attackers = {1: attacker}
+#set up attackers
+attacker1 = Attacker()
+attacker2 = Attacker()
+attacker3 = Attacker()
+attacker4 = Attacker()
+attacker5 = Attacker()
+attackers = {1: attacker1, 2: attacker2, 3: attacker3, 4: attacker4, 5: attacker5}
 game = Game(targets, rewards, cogestion_costs, penalties, defender, attackers) #fill with attackers as well
 #uodate congestion of each target from game attacker stratwgy profile
 for id in game.attacker_strategy_profile:
@@ -48,7 +53,7 @@ for i in range(0, 1000):
     print(defender.lambda_value)
 '''
 #test strategy computation
-test_qr = [random.uniform(-200, 10000) for i in range(num_targets)]
+test_qr = [random.uniform(-200, 100) for i in range(num_targets)]
 defender.optimize_strategy(targets, test_qr)
 print(defender.mixed_strategy)
 #test update game state
@@ -70,8 +75,28 @@ for attacker in game.attackers.values():
     attacker.calculate_expected_utility(target, game.defender.mixed_strategy, game.attacker_strategy_profile)
     print(attacker.expected_utilities)
 #test optimize strategy
-game.attackers[1].optimize_mixed_strategy(game)
-print(attacker.current_strategy)
+for attacker in game.attackers.values():
+    attacker.optimize_mixed_strategy(game)
+    print(attacker.current_strategy)
+
+#test potential function
+game.calculate_potential_function_value(1)
+print(game.actual_potential_function_value)
+
+defender.update_lambda_value(list(game.past_potential_function_values.values()))
+print(defender.lambda_value)
+#test strategy computation
+test_qr = [random.uniform(-200, 10000) for i in range(num_targets)]
+defender.optimize_strategy(targets, test_qr)
+print(defender.mixed_strategy)
+#test update game state
+for target in game.game_state.values():
+    target.defender_strategy = defender.mixed_strategy[target.name]
+
+#test defender utility calculation 
+defender.calculate_utility(game)
+print(defender.past_utilities)
+
 
 
 
