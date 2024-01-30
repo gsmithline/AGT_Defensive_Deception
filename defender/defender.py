@@ -13,9 +13,12 @@ class Defender:
         self.beliefs_congestion = initial_beliefs
         self.lambda_bound = lambda_bound
         self.mixed_strategy = [1 / num_targets] * num_targets
-        self.lambda_bayes = beta(a=1, b=1) #between 0 and 1 to start
+        #self.lambda_bayes = beta(a=1, b=1) #between 0 and 1 to start
 
-        #self.lambda_bayes = gamma(1) #between 0 and 1 to start
+        self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
+        self.lambda_scale = 1  # Scale parameter for the gamma distribution
+        self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
+
         self.lambda_value = self.lambda_bound #fix this later
         self.past_utilities = []
         
@@ -41,13 +44,14 @@ class Defender:
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = expected_lambda / normalization_factor if expected_lambda > 0 else self.lambda_bayes.mean()
         
-        updated_a = np.log(self.lambda_bayes.a + np.sum(observed_potentials))
-        #updated_a = updated_a if updated_a > 0 else random.uniform(0, 1)
-        print(f'updated_a: {updated_a}')
-        updated_b = np.log(abs(self.lambda_bayes.b + len(observed_potentials) - np.sum(observed_potentials)))
-        #updated_b = updated_b if updated_b > 0 else random.uniform(0, 1)
-        print(f'updated_b: {updated_b}') 
-        self.lambda_bayes = beta(updated_a, updated_b)
+        updated_shape = self.lambda_shape + len(observed_potentials)
+        updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials))
+
+        # Create a new gamma distribution with updated parameters
+        self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
+        self.lambda_shape = updated_shape
+        self.lambda_scale = updated_scale
+
         #self.lambda_bayes = gamma(updated_a, updated_b)
         self.lambda_value = new_lambda
         
@@ -78,7 +82,7 @@ class Defender:
         return total_utility
 
     def quantal_response(self, lambda_value, game):
-    # Dictionary to store the exponentiated utilities for each attacker
+        # Dictionary to store the exponentiated utilities for each attacker
         exp_utilities = {attacker_id: [] for attacker_id in game.attackers}
 
         # Iterate over each target to calculate utilities for each attacker
@@ -95,9 +99,17 @@ class Defender:
         probabilities = {attacker_id: np.array(utilities) / np.sum(utilities) 
                         for attacker_id, utilities in exp_utilities.items()}
 
-        self.expected_congestion = probabilities
+        # Aggregate probabilities across attackers for each target
+        num_targets = len(game.game_state)
+        aggregated_probabilities = np.zeros(num_targets)
+        for attacker_id in probabilities:
+            aggregated_probabilities += probabilities[attacker_id]
 
-        return probabilities
+        # Update expected congestion
+        self.expected_congestion = aggregated_probabilities
+
+        return aggregated_probabilities
+
 
     
 

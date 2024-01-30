@@ -41,7 +41,24 @@ for id in game.attacker_strategy_profile:
     #update attacker strategy to initial
     game.attackers[id].update_strategy(attacker)
     
+#calculate potential function
+game.calculate_potential_function_value(1)
+print(game.actual_potential_function_value)
+#update lambda
+defender.update_lambda_value(list(game.past_potential_function_values.values()))
+print(defender.lambda_value)
+#test qr defender 
+defender.quantal_response(defender.lambda_value, game)
+print(defender.expected_congestion)
 
+#test strategy computation defender
+defender.optimize_strategy(targets, defender.expected_congestion)
+print(defender.mixed_strategy)
+#test defender expected utility
+defender.calculate_utility(game)
+print(defender.past_utilities)
+
+'''
 
 #test bayesian
 test_observed_potentuals = [random.uniform(1, 10) for i in range(num_targets)] 
@@ -64,11 +81,6 @@ for target in game.game_state.values():
 defender.calculate_utility(game)
 print(defender.past_utilities)
     
-'''
-for attacker in game.attackers.values():
-    attacker.optimize_mixed_strategy(game)
-    print(attacker.current_strategy)
-'''
 #test attacker 
 #test utility
 for attacker in game.attackers.values():
@@ -110,6 +122,6 @@ print(defender.past_utilities)
 
 
  
-
+'''
 
 
