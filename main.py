@@ -6,7 +6,7 @@ import random
 import numpy
 #this file will be the main file that will run the game
 #Globals
-num_targets = 60
+num_targets = 50
 #random game set up 
 game_rounds = 200
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
@@ -42,7 +42,7 @@ for id in game.attacker_strategy_profile:
     game.attackers[id].update_strategy(attacker)
     
 
-'''
+
 #test bayesian
 test_observed_potentuals = [random.uniform(1, 10) for i in range(num_targets)] 
 defender.update_lambda_value(test_observed_potentuals)
@@ -50,8 +50,8 @@ print(defender.lambda_value)
 for i in range(0, 1000):
     test_observed_potentuals.append(random.uniform(1, 10))
     defender.update_lambda_value(test_observed_potentuals)
-    print(defender.lambda_value)
-'''
+    print("lambda value: ", defender.lambda_value)
+
 #test strategy computation
 test_qr = [random.uniform(-200, 100) for i in range(num_targets)]
 defender.optimize_strategy(targets, test_qr)

@@ -2,7 +2,7 @@ import scipy.optimize as opt
 import numpy as np
 import math
 import random
-from scipy.stats import beta, norm
+from scipy.stats import beta, norm, lognorm
 from scipy.integrate import quad, IntegrationWarning
 import warnings
 from scipy.optimize import minimize

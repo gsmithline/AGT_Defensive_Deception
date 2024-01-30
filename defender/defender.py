@@ -2,7 +2,7 @@ import scipy.optimize as opt
 import numpy as np
 import math
 import random
-from scipy.stats import beta, norm
+from scipy.stats import beta, norm, gamma
 from scipy.integrate import quad, IntegrationWarning
 import warnings
 
@@ -14,6 +14,8 @@ class Defender:
         self.lambda_bound = lambda_bound
         self.mixed_strategy = [1 / num_targets] * num_targets
         self.lambda_bayes = beta(a=1, b=1) #between 0 and 1 to start
+
+        #self.lambda_bayes = gamma(1) #between 0 and 1 to start
         self.lambda_value = self.lambda_bound #fix this later
         self.past_utilities = []
         
@@ -46,6 +48,7 @@ class Defender:
         #updated_b = updated_b if updated_b > 0 else random.uniform(0, 1)
         print(f'updated_b: {updated_b}') 
         self.lambda_bayes = beta(updated_a, updated_b)
+        #self.lambda_bayes = gamma(updated_a, updated_b)
         self.lambda_value = new_lambda
         
         return self.lambda_value
@@ -74,18 +77,32 @@ class Defender:
 
         return total_utility
 
+    def quantal_response(self, lambda_value, game):
+    # Dictionary to store the exponentiated utilities for each attacker
+        exp_utilities = {attacker_id: [] for attacker_id in game.attackers}
 
+        # Iterate over each target to calculate utilities for each attacker
+        for target in game.game_state.values():
+            for attacker_id, attacker in game.attackers.items():
+                # Calculate the attacker's utility for this target
+                utility = attacker.calculate_expected_utility(target, self.mixed_strategy, game.attacker_strategy_profile)
 
-    def quantal_response(self, lambda_value):
-        # Compute QR probabilities based on the current lambda value
-        utilities = self.beliefs  # Placeholder for utility calculations
-        exp_utilities = np.exp(lambda_value * utilities)
-        probabilities = exp_utilities / np.sum(exp_utilities)
+                # Exponentiate the utility and append it to the list
+                exp_utility = np.exp(lambda_value * utility)
+                exp_utilities[attacker_id].append(exp_utility)
+
+        # Normalize the exponentiated utilities to form a probability distribution for each attacker
+        probabilities = {attacker_id: np.array(utilities) / np.sum(utilities) 
+                        for attacker_id, utilities in exp_utilities.items()}
+
+        self.expected_congestion = probabilities
+
         return probabilities
+
+    
 
     #Using sequential least squares programming
     def optimize_strategy(self, targets, expected_congestion):
-        self.expected_congestion = expected_congestion
         c = [targets[j].congestion_cost for j in range(self.num_targets)]
         P = [targets[j].reward for j in range(self.num_targets)]
         R = [targets[j].penalty for j in range(self.num_targets)]
