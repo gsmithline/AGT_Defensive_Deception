@@ -31,9 +31,32 @@ class Game:
     def run_congestion_game(self):
         #this runs the inner attacker congestion game
         pass
-
-    def ibr_attackers_decayed_learning_rate(self, learning_rate):
+    def ibr_attackers(self, epsilon, max_iterations):
         #computes epsilon nash for attackers
+        #this is the attackers actual congestion game
+        attackers_strategies = set()
+        for i in range(max_iterations):
+            # Update attacker strategies
+            for attacker in self.attackers.values():
+                if len(attackers_strategies) == len(self.attackers):    
+                    break
+                if attacker not in attackers_strategies:
+                    print(f"Attacker {attacker.attack_id} optimizing strategy")
+                    current_utility = attacker.expected_utilities
+                    attacker.optimize_mixed_strategy(self)
+                    self.update_game_state() #update game state after attacker strategy update
+                    new_utility = attacker.expected_utilities
+                    print(f"Attacker {attacker.attack_id} old utility: {new_utility}, new utility: {current_utility}")
+                    if abs(new_utility - current_utility) < epsilon:
+                        attackers_strategies.add(attacker)
+            if len(attackers_strategies) == len(self.attackers):
+                break
+        print(f"Converged after {i} iterations")
+
+
+    def price_of_anarchy(self):
+        #computes price of anarchy for the attackers for the game
+        #this happens after each round and we have perfect information of the game
         pass
 
     #updateing game state after algorithm finishes
@@ -42,6 +65,7 @@ class Game:
         for target_id, target in self.game_state.items():
             # Update defender strategy for each target
             #defender mixed strategy is array of probabilities for each target
+
             target.update_defender_strategy(self.defender.mixed_strategy[target_id-1])
             
             # Update attacker strategies for each target

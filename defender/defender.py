@@ -13,7 +13,6 @@ class Defender:
         self.beliefs_congestion = initial_beliefs
         self.lambda_bound = lambda_bound
         self.mixed_strategy = [1 / num_targets] * num_targets
-        #self.lambda_bayes = beta(a=1, b=1) #between 0 and 1 to start
 
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1  # Scale parameter for the gamma distribution
@@ -47,14 +46,10 @@ class Defender:
         updated_shape = self.lambda_shape + len(observed_potentials)
         updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials))
 
-        # Create a new gamma distribution with updated parameters
         self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-
-        #self.lambda_bayes = gamma(updated_a, updated_b)
         self.lambda_value = new_lambda
-        
         return self.lambda_value
 
 

@@ -32,7 +32,7 @@ class Attacker:
     def update_past_actual_utilities(self, new_past_actual_utilities):
         self.past_actual_utilities = new_past_actual_utilities
 
-    def calculate_expected_utility(self, target, defender_strategy, all_strategies):
+    def calculate_expected_utility(self, target, defender_strategy, all_strategies): 
         R_j = target.reward
         P_j = target.penalty
         c_j = target.congestion_cost

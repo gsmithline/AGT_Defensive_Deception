@@ -31,6 +31,7 @@ attacker3 = Attacker()
 attacker4 = Attacker()
 attacker5 = Attacker()
 attackers = {1: attacker1, 2: attacker2, 3: attacker3, 4: attacker4, 5: attacker5}
+#set up gam
 game = Game(targets, rewards, cogestion_costs, penalties, defender, attackers) #fill with attackers as well
 #uodate congestion of each target from game attacker stratwgy profile
 for id in game.attacker_strategy_profile:
@@ -40,7 +41,16 @@ for id in game.attacker_strategy_profile:
         #print(game.game_state[i].congestion)
     #update attacker strategy to initial
     game.attackers[id].update_strategy(attacker)
-    
+for id, attacker  in attackers.items():
+    attacker.attack_id = id
+    for target in game.game_state.values():
+        attacker.calculate_expected_utility(target, defender.mixed_strategy, game.attacker_strategy_profile)
+        print(attacker.expected_utilities)
+
+print("stop here")
+
+#test ibr
+game.ibr_attackers(.0001, 1000)  
 #calculate potential function
 game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
