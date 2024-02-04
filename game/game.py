@@ -59,8 +59,7 @@ class Game:
                     current_strategy = copy.deepcopy(attacker.current_strategy) #save old strategy
                     attacker.optimize_mixed_strategy(self) #optimize attacker strategy
                     self.update_game_state_new() #update game state after attacker strategy update
-                    for target in self.game_state.values():
-                        attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
+                    attacker.actually_calc_utility(self)
                     attacker.update_actual_utility(attacker.expected_utilities)
                     attacker.update_expected_utilities(0) #update expected utility after
                     new_utility = attacker.actual_utility #get new utility

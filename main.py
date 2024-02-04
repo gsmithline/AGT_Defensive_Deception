@@ -26,7 +26,7 @@ lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 50):
+for i in range(1, 100):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker
@@ -42,9 +42,7 @@ for id in game.attacker_strategy_profile:
     game.attackers[id].update_strategy(attacker)
 for id, attacker  in attackers.items():
     attacker.attack_id = id
-    for target in game.game_state.values():
-        attacker.calculate_expected_utility(target, defender.mixed_strategy, game.attacker_strategy_profile)
-        print(attacker.expected_utilities)
+    attacker.actually_calc_utility(game)
 
 print("original potential function value")
 game.calculate_potential_function_value(1)

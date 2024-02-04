@@ -29,8 +29,16 @@ class Attacker:
     def update_past_expected_utilities(self, new_past_expected_utilities):
         self.past_expected_utilities = new_past_expected_utilities
     
-    def update_past_actual_utilities(self, new_past_actual_utilities):
+    def update_past_actual_utilities(self, new_past_actual_utilities): 
         self.past_actual_utilities = new_past_actual_utilities
+    
+    def actually_calc_utility(self, game):
+        utilility = 0
+        for target in game.game_state.values():
+            utilility += self.calculate_expected_utility(target, game.defender.mixed_strategy, game.attacker_strategy_profile)
+        self.expected_utilities = utilility
+        self.past_actual_utilities.append(utilility)
+        
 
     def calculate_expected_utility(self, target, defender_strategy, all_strategies): 
         R_j = target.reward
@@ -43,8 +51,6 @@ class Attacker:
         n_j = sum(attackers_at_target)
         
         utility = (1 - hat_x_j) * R_j**2 - hat_x_j * P_j - c_j * n_j**2
-        #self.past_expected_utilities.append(utility)
-        self.expected_utilities += utility
         return utility
 
     def optimize_mixed_strategy(self, game, POA = False):
@@ -59,8 +65,7 @@ class Attacker:
         # Constraints: Probabilities must sum to 1
         cons = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
         
-        # Bounds for each decision variable (probability between 0 and 1), normalize
-        print(len(game.game_state)) 
+        # Bounds for each decision variable (probability between 0 and 1), normalize 
         bounds = [(0, 1) for _ in range(len(game.game_state))]
         
         # Solve the optimization problem
