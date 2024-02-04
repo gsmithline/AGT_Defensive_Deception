@@ -6,7 +6,7 @@ import random
 import numpy
 #this file will be the main file that will run the game
 #Globals
-num_targets = 50
+num_targets = 70
 #random game set up 
 game_rounds = 200
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
@@ -24,13 +24,12 @@ initial_beliefs = [random.uniform(1, 10) for i in range(num_targets)]
 
 lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
+attackers = {}
 #set up attackers
-attacker1 = Attacker()
-attacker2 = Attacker()
-attacker3 = Attacker()
-attacker4 = Attacker()
-attacker5 = Attacker()
-attackers = {1: attacker1, 2: attacker2, 3: attacker3, 4: attacker4, 5: attacker5}
+for i in range(1, 50):
+    attacker = Attacker()
+    attacker.attack_id = i
+    attackers[i] = attacker
 #set up gam
 game = Game(targets, rewards, cogestion_costs, penalties, defender, attackers) #fill with attackers as well
 #uodate congestion of each target from game attacker stratwgy profile
@@ -47,11 +46,12 @@ for id, attacker  in attackers.items():
         attacker.calculate_expected_utility(target, defender.mixed_strategy, game.attacker_strategy_profile)
         print(attacker.expected_utilities)
 
-print("stop here")
-
+print("original potential function value")
+game.calculate_potential_function_value(1)
+print(game.actual_potential_function_value)
+ 
 #test ibr
-game.ibr_attackers(.0001, 1000)  
-#calculate potential function
+game.ibr_attackers(2)  
 game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
 #update lambda
@@ -67,6 +67,8 @@ print(defender.mixed_strategy)
 #test defender expected utility
 defender.calculate_utility(game)
 print(defender.past_utilities)
+game.calculate_potential_function_value(1)
+print(game.actual_potential_function_value)
 
 '''
 

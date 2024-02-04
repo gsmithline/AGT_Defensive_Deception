@@ -11,8 +11,8 @@ from scipy.optimize import Bounds
 class Attacker:
     def __init__(self):
         self.current_strategy = None #dict with mixed strategy at each target labeld for house keeping
-        self.expected_utilities = None #some float from utility calculation
-        self.actual_utility = None #some float from utility calculation
+        self.expected_utilities = 0 #some float from utility calculation
+        self.actual_utility = 0 #some float from utility calculation
         self.past_expected_utilities = []
         self.past_actual_utilities = []
         self.attack_id = None #some int randomly assigned
@@ -43,11 +43,11 @@ class Attacker:
         n_j = sum(attackers_at_target)
         
         utility = (1 - hat_x_j) * R_j**2 - hat_x_j * P_j - c_j * n_j**2
-        self.past_expected_utilities.append(utility)
-        self.expected_utilities = utility
+        #self.past_expected_utilities.append(utility)
+        self.expected_utilities += utility
         return utility
 
-    def optimize_mixed_strategy(self, game):
+    def optimize_mixed_strategy(self, game, POA = False):
         # Define the objective function (negative of expected utility to minimize)
         def objective(strategy):
             utilities = np.array([
@@ -68,8 +68,9 @@ class Attacker:
         
         if result.success:
             #normalize strategy
-            self.current_strategy = result.x / np.sum(result.x)
-            game.attacker_strategy_profile[self.attack_id] = self.current_strategy
+            if POA != True:
+                self.current_strategy = result.x / np.sum(result.x)
+                game.attacker_strategy_profile[self.attack_id] = self.current_strategy
 
         else:
             print("Optimization failed:", result.message)
