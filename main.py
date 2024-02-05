@@ -26,7 +26,7 @@ lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 100):
+for i in range(1, 20):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker
@@ -39,7 +39,7 @@ for id in game.attacker_strategy_profile:
         game.game_state[i].congestion += attacker[i]
         #print(game.game_state[i].congestion)
     #update attacker strategy to initial
-    game.attackers[id].update_strategy(attacker)
+    game.attackers[id].update_strategy(attacker) 
 for id, attacker  in attackers.items():
     attacker.attack_id = id
     attacker.actually_calc_utility(game)

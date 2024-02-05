@@ -35,7 +35,7 @@ class Game:
         #this runs the inner attacker congestion game
 
         pass
-    def ibr_attackers(self, max_iterations, epsilon = 1e-100):
+    def ibr_attackers(self, max_iterations, epsilon = .001):
         #computes epsilon nash for attackers
         #this is the attackers actual congestion game
         none_can_deviate = False
@@ -64,13 +64,13 @@ class Game:
                     attacker.update_expected_utilities(0) #update expected utility after
                     new_utility = attacker.actual_utility #get new utility
                     print(f"Checking if Attacker {attacker.attack_id} can deviate from old utility: {current_utility} to new utility: {new_utility}")
-                    if new_utility < current_utility or new_utility - current_utility < 0: # dont update strategy best choice is less than current, revert back
+                    if new_utility < current_utility  or new_utility - current_utility < 0: # dont update strategy best choice is less than current, revert back
                         attacker.update_strategy(current_strategy)
                         attacker.update_expected_utilities(current_utility)
                         self.update_game_state(old_game_state) #revert back to old game state
                         game_set.remove(attacker) #remove attacker from game set
                         print(f"Attacker {attacker.attack_id} could not deviate, removing from game set in this round")
-                    else:
+                    else: #if the difference is less than epsilon, add to attackers strategies
                         game_set.remove(attacker)
                         print(f"Attacker {attacker.attack_id} did deviate from old utility: {current_utility}, to new utility: {new_utility}")
 
@@ -89,7 +89,7 @@ class Game:
                         current_strategy = attacker.current_strategy
                         attacker.optimize_mixed_strategy(self)
                         new_utility = attacker.expected_utilities
-                        if new_utility <= current_utility or (new_utility - current_utility < epsilon and new_utility - current_utility > 0):
+                        if (new_utility <= current_utility and new_utility - current_utility < epsilon)  or (new_utility - current_utility < epsilon and new_utility - current_utility > 0):
                             #attacker.update_strategy(current_strategy)
                             counter += 1
                         else:
