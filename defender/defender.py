@@ -131,7 +131,7 @@ class Defender:
         if result.success:
             self.mixed_strategy = {}
             for target in targets.values():
-                target.defender_strategy = result.x[target.name]
+                target.defender_strategy = result.x[target.name] 
                 self.mixed_strategy[target.name] = target.defender_strategy
         else:
             raise Exception("Optimization failed: " + result.message)

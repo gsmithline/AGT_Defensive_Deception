@@ -1,4 +1,4 @@
-import scipy.optimize as opt
+from scipy.optimize import minimize
 import numpy as np
 import math
 import random
@@ -98,6 +98,7 @@ class Game:
                 none_can_deviate = False # Work with a copy to avoid modification issues during iteration
                 while temp_attackers_strategies and counter < len(temp_attackers_strategies):
                     attacker = random.choice(list(temp_attackers_strategies))
+                    temp_attackers_strategies.remove(attacker)
                     old_game_state = copy.deepcopy(self.game_state)
                     attacker.actually_calc_utility(self)
                     current_utility = copy.deepcopy(attacker.actual_utility)
@@ -150,24 +151,74 @@ class Game:
         computed_poa = self.actual_potential_function_value
         #optimal potential function value
         #now we have defender strategy, compute optimal potential function value
-        optimal_potential_function_value = 0
-        for target in self.game_state.values():
-            # For each target, iterate over each attacker
-            for attacker_id, attacker in self.attackers.items():
-                # Probability of this attacker targeting this target
-                y_ij = attacker.current_strategy[target.name]
-                # Utility for attacker i when choosing target j
-                # Assuming calculate_expected_utility function calculates U_{ij} for a given target
-                U_ij = attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
-                # Add to the potential function value
-                optimal_potential_function_value += y_ij * U_ij
+        optimal_potential_function_value = self.calculate_social_optimum()
+        poa = optimal_potential_function_value / computed_poa 
+        self.past_poa.append(poa)
+        self.current_poa = poa
 
-        pass     
+             
    
     def calculate_social_optimum(self):
-    # Setup and solve the optimization problem to find the social optimum
-    # This is highly dependent on your game's specifics
-        defender_strategy = self.defender.mixed_strategy
+        num_targets = len(self.game_state)
+        
+        # Objective function for the total potential function to be maximized
+        def total_potential_function(strategy_vector):
+            # Assume strategy_vector is a flattened array of probabilities for each target
+            potential_value = 0
+            for j, target in enumerate(self.game_state.values()):
+                # Calculate the utility of each target based on the attacker's strategy
+                # Here, we consider the strategy_vector directly as the collective strategy of all attackers
+                utility = self.calculate_total_utility_for_target(target, strategy_vector[j], self.defender.mixed_strategy)
+                potential_value += utility
+            return -potential_value  # Minimize the negative to maximize
+        
+        # Initial guess (uniform distribution across targets)
+        initial_guess = np.ones(num_targets) / num_targets
+        
+        # Constraints: The sum of probabilities across all targets must equal 1
+        cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+        
+        # Bounds for each probability in the strategy
+        bounds = [(0, 1) for _ in range(num_targets)]
+        
+        # Solve the optimization problem
+        result = minimize(total_potential_function, initial_guess, method='SLSQP', bounds=bounds, constraints=[cons])
+        
+        if not result.success:
+            raise ValueError("Optimization failed:", result.message)
+        
+        optimal_strategy = result.x
+        optimal_potential_value = -result.fun  # Convert back to maximization value
+
+        
+        # Here, calculate_total_utility_for_target needs to be defined to calculate the utility
+        # for a target based on the combined strategy of all attackers and the current defender strategy.
+        '''
+        def calculcate_optimal_potential_function_value(optimal_strategy, defender_strategy):
+            #copy current strategy profile 
+            attacker_strategy_profile = copy.deepcopy(self.attacker_strategy_profile)
+            #fill it with optimal strategy
+            for attacker_id, attacker in self.attackers.items():
+                attacker_strategy_profile[attacker_id] = optimal_strategy[]
+            #copy game state
+            game_state = copy.deepcopy(self.game_state)
+
+            #fill it with optimal strategy
+
+            optimal_potential_function_value = 0
+
+            for target in self.game_state.values():
+                for attacker_id, attacker in self.attackers.items():
+                    y_ij = attacker.current_strategy[target.name]
+                    U_ij = attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
+                    optimal_potential_function_value += y_ij * U_ij
+            return optimal_potential_function_value
+        '''
+            
+        
+        return optimal_potential_value, optimal_strategy
+
+
 
 
     pass
@@ -210,6 +261,8 @@ class Game:
         self.past_potential_function_values[game_state] = potential_function_value
         self.average_potential_for_attacker = potential_function_value / len(self.attackers)
         return potential_function_value
+    
+    
 
 
 

@@ -49,7 +49,7 @@ game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
  
 #test ibr
-game.ibr_attackers(1000)  
+game.ibr_attackers(10)  
 game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
 #update lambda
@@ -67,6 +67,12 @@ defender.calculate_utility(game)
 print(defender.past_utilities)
 game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
+#calculate price of anarchy
+game.price_of_anarchy()
+print(game.current_poa)
+
+
+#
 
 '''
 
