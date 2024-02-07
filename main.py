@@ -26,7 +26,7 @@ lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 50):
+for i in range(1, 10):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker

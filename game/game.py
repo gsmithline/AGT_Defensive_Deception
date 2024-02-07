@@ -36,7 +36,7 @@ class Game:
 
         pass
     
-    def ibr_attackers(self, max_iterations, epsilon=10):
+    def ibr_attackers(self, max_iterations, epsilon=1):
         # Computes epsilon Nash for attackers
         # This is the attackers' actual congestion game
         none_can_deviate = False
@@ -54,6 +54,7 @@ class Game:
                 attacker = random.choice(list(game_set))
                 print(f"Attacker {attacker.attack_id} optimizing strategy")
                 old_game_state = copy.deepcopy(self.game_state)
+                attacker.actually_calc_utility(self) #recalculate utility
                 current_utility = copy.deepcopy(attacker.actual_utility)
                 current_strategy = copy.deepcopy(attacker.current_strategy)
                 attacker.optimize_mixed_strategy(self)
@@ -93,21 +94,26 @@ class Game:
             # After updating all, check if convergence criteria met for all
             if len(attackers_strategies) == len(self.attackers):
                 temp_attackers_strategies = attackers_strategies.copy()
-                counter = 0  # Work with a copy to avoid modification issues during iteration
+                counter = 0 
+                none_can_deviate = False # Work with a copy to avoid modification issues during iteration
                 while temp_attackers_strategies and counter < len(temp_attackers_strategies):
                     attacker = random.choice(list(temp_attackers_strategies))
                     old_game_state = copy.deepcopy(self.game_state)
+                    attacker.actually_calc_utility(self)
                     current_utility = copy.deepcopy(attacker.actual_utility)
                     current_strategy = copy.deepcopy(attacker.current_strategy)
                     attacker.optimize_mixed_strategy(self)
                     attacker.actually_calc_utility(self)
                     new_utility = attacker.actual_utility
-            
                     if new_utility - current_utility <= epsilon and new_utility > current_utility:
+                        print(f"Attacker {attacker.attack_id} did deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                        print(f"Attacker {attacker.attack_id} has converged at epsilon-strat")
                         self.update_game_state_new()
                         none_can_deviate = True
                         counter += 1
                     elif current_utility - new_utility <= epsilon and current_utility > new_utility :
+                        print(f"Attacker {attacker.attack_id} did not deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                        print(f"Attacker {attacker.attack_id} already converged at epsilon-strat")
                         attacker.update_strategy(current_strategy)
                         attacker.update_actual_utility(current_utility)
                         self.update_game_state(old_game_state)
@@ -134,6 +140,7 @@ class Game:
             print(f"Did not converge to epsilon-nash after {iteration} iterations, max iterations reached")
         else:
             print(f"Converged after {iteration} iterations, converged to epsilon-nash") 
+
 
 
     
