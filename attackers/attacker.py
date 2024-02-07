@@ -36,7 +36,7 @@ class Attacker:
         utilility = 0
         for target in game.game_state.values():
             utilility += self.calculate_expected_utility(target, game.defender.mixed_strategy, game.attacker_strategy_profile)
-        self.expected_utilities = utilility
+        self.actual_utility = utilility
         self.past_actual_utilities.append(utilility)
         
 

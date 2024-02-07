@@ -26,7 +26,7 @@ lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 20):
+for i in range(1, 50):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker
@@ -49,7 +49,7 @@ game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
  
 #test ibr
-game.ibr_attackers(2)  
+game.ibr_attackers(1000)  
 game.calculate_potential_function_value(1)
 print(game.actual_potential_function_value)
 #update lambda

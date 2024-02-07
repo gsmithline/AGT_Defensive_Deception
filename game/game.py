@@ -35,77 +35,108 @@ class Game:
         #this runs the inner attacker congestion game
 
         pass
-    def ibr_attackers(self, max_iterations, epsilon = .001):
-        #computes epsilon nash for attackers
-        #this is the attackers actual congestion game
+    
+    def ibr_attackers(self, max_iterations, epsilon=10):
+        # Computes epsilon Nash for attackers
+        # This is the attackers' actual congestion game
         none_can_deviate = False
         attackers_strategies = set()
-        for i in range(max_iterations):
-            # Update attacker strategies
-            #add all attacker to the game set
-            game_set = set()
-            for attacker in self.attackers.values():
-                if attacker not in attackers_strategies:
-                    game_set.add(attacker) 
-            
-            for i in range(len(game_set)):
-                attacker = random.choice(list(game_set)) #randomly select attacker
-                if len(attackers_strategies) == len(self.attackers) and none_can_deviate == True:    
-                    break
-                if attacker not in attackers_strategies:
-                    old_game_state = copy.deepcopy(self.game_state) #save old game state
-                    print(f"Attacker {attacker.attack_id} optimizing strategy")
-                    current_utility = copy.deepcopy(attacker.expected_utilities) #save old utility
-                    current_strategy = copy.deepcopy(attacker.current_strategy) #save old strategy
-                    attacker.optimize_mixed_strategy(self) #optimize attacker strategy
-                    self.update_game_state_new() #update game state after attacker strategy update
-                    attacker.actually_calc_utility(self)
-                    attacker.update_actual_utility(attacker.expected_utilities)
-                    attacker.update_expected_utilities(0) #update expected utility after
-                    new_utility = attacker.actual_utility #get new utility
-                    print(f"Checking if Attacker {attacker.attack_id} can deviate from old utility: {current_utility} to new utility: {new_utility}")
-                    if new_utility < current_utility  or new_utility - current_utility < 0: # dont update strategy best choice is less than current, revert back
-                        attacker.update_strategy(current_strategy)
-                        attacker.update_expected_utilities(current_utility)
-                        self.update_game_state(old_game_state) #revert back to old game state
-                        game_set.remove(attacker) #remove attacker from game set
-                        print(f"Attacker {attacker.attack_id} could not deviate, removing from game set in this round")
-                    else: #if the difference is less than epsilon, add to attackers strategies
-                        game_set.remove(attacker)
-                        print(f"Attacker {attacker.attack_id} did deviate from old utility: {current_utility}, to new utility: {new_utility}")
+        iteration = 0
 
-                    print(f"Attacker {attacker.attack_id} old utility: {current_utility}, new utility: {new_utility}")
-                    if new_utility - current_utility < epsilon:
-                        attackers_strategies.add(attacker)
-                        print(f"Attacker {attacker.attack_id} has converged, removing from game set")
-                        if attacker in game_set:
-                            game_set.remove(attacker)
-                        
+        while iteration < max_iterations and not none_can_deviate:
+            game_set = {attacker for attacker in self.attackers.values() if attacker not in attackers_strategies}
+
+            if len(game_set) == 0:
+                none_can_deviate = True
+                break
+
+            while game_set:
+                attacker = random.choice(list(game_set))
+                print(f"Attacker {attacker.attack_id} optimizing strategy")
+                old_game_state = copy.deepcopy(self.game_state)
+                current_utility = copy.deepcopy(attacker.actual_utility)
+                current_strategy = copy.deepcopy(attacker.current_strategy)
+                attacker.optimize_mixed_strategy(self)
+                self.update_game_state_new()
+                attacker.actually_calc_utility(self)
+                new_utility = attacker.actual_utility
+                print(f"Checking if Attacker {attacker.attack_id} can deviate from old utility: {current_utility} to new utility: {new_utility}")
+                if (new_utility - current_utility <= epsilon and new_utility > current_utility): #came to epsilon strat 
+                    print(f"Attacker {attacker.attack_id} did deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                    print(f"Attacker {attacker.attack_id} has converged at epsilon-strat, removing from game set")
+                     # Allow small deviations
+                    attackers_strategies.add(attacker)
+                    game_set.remove(attacker)
+                elif new_utility > current_utility and new_utility - current_utility > epsilon: # big deviation, keep new strategy, but still in game set
+                    print(f"Attacker {attacker.attack_id} could deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                    print(f"Attacker {attacker.attack_id} could still deviate more, staying in game set")
+                elif current_utility - new_utility <= epsilon and current_utility >= new_utility: #current is actually a nash we remove from game set and switch back to old strategy
+                    print(f"Attacker {attacker.attack_id} did not deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                    print(f"Attacker {attacker.attack_id} already converged at epsilon-strat, removing from game set")
+                    attacker.update_strategy(current_strategy)
+                    attacker.update_actual_utility(current_utility)
+                    self.update_game_state(old_game_state)
+                    attackers_strategies.add(attacker)
+                    game_set.remove(attacker)
+                    # Revert changes if no improvement or outside ε range
+                elif new_utility <= current_utility and current_utility - new_utility > epsilon:  # Revert changes if no improvement or outside ε range
+                    print(f"Attacker {attacker.attack_id} did not deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                    print(f"Attacker {attacker.attack_id} did not converge, new strat MUCH WORSE, staying in game set")
+                    attacker.update_strategy(current_strategy)
+                    attacker.update_actual_utility(current_utility)
+                    self.update_game_state(old_game_state)
+                    game_set.remove(attacker)
+                    attackers_strategies.add(attacker)
+
+            iteration += 1
+
+            # After updating all, check if convergence criteria met for all
             if len(attackers_strategies) == len(self.attackers):
-                print(f"Checking none can deviate to better strategy")
-                counter = 0
-                for attacker in  attackers_strategies:
-                        current_utility = attacker.expected_utilities
-                        current_strategy = attacker.current_strategy
-                        attacker.optimize_mixed_strategy(self)
-                        new_utility = attacker.expected_utilities
-                        if (new_utility <= current_utility and new_utility - current_utility < epsilon)  or (new_utility - current_utility < epsilon and new_utility - current_utility > 0):
-                            #attacker.update_strategy(current_strategy)
-                            counter += 1
-                        else:
-                            print(f"Attacker {attacker.attack_id} could deviate from old utility: {new_utility}, to new utility: {current_utility}")
-                            attackers_strategies.remove(attacker)
-                            break
-                if counter == len(attackers_strategies):
-                    none_can_deviate = True
+                temp_attackers_strategies = attackers_strategies.copy()
+                counter = 0  # Work with a copy to avoid modification issues during iteration
+                while temp_attackers_strategies and counter < len(temp_attackers_strategies):
+                    attacker = random.choice(list(temp_attackers_strategies))
+                    old_game_state = copy.deepcopy(self.game_state)
+                    current_utility = copy.deepcopy(attacker.actual_utility)
+                    current_strategy = copy.deepcopy(attacker.current_strategy)
+                    attacker.optimize_mixed_strategy(self)
+                    attacker.actually_calc_utility(self)
+                    new_utility = attacker.actual_utility
+            
+                    if new_utility - current_utility <= epsilon and new_utility > current_utility:
+                        self.update_game_state_new()
+                        none_can_deviate = True
+                        counter += 1
+                    elif current_utility - new_utility <= epsilon and current_utility > new_utility :
+                        attacker.update_strategy(current_strategy)
+                        attacker.update_actual_utility(current_utility)
+                        self.update_game_state(old_game_state)
+                        counter += 1
+                        none_can_deviate = True
+                    else:
+                        none_can_deviate = False
+                        print(f"Attacker {attacker.attack_id} can deviate from old utility: {current_utility}, to new utility: {new_utility}")
+                        print(f"Attacker {attacker.attack_id} can still deviate, adding back to game set")
+                        attacker.update_strategy(current_strategy)  
+                        attacker.update_actual_utility(new_utility)
+                        self.update_game_state_new()
+                        game_set.add(attacker)
+                        attackers_strategies.remove(attacker)
+                        #temp_attackers_strategies.remove(attacker)
+                        break
+                if none_can_deviate:
+                    # If none_can_deviate is still True after this check, then no attacker can improve by more than epsilon
                     print(f"None can deviate from their strategy")
-                    break
-                else:
-                    print(f"Some attackers can deviate from their strategy")
-                   
-        print(f"Converged after {i} iterations")
+                    print(f"Converged after {iteration} iterations") 
+                    break  # Exit the loop as we've reached the desired convergence criterion
 
-    '''
+        if iteration == max_iterations and not none_can_deviate:
+            print(f"Did not converge to epsilon-nash after {iteration} iterations, max iterations reached")
+        else:
+            print(f"Converged after {iteration} iterations, converged to epsilon-nash") 
+
+
+    
     def price_of_anarchy(self):
         #computes price of anarchy for the attackers for the game
         #this happens after each round and we have perfect information of the game
@@ -138,7 +169,7 @@ class Game:
         optimal_potential_function_value = self.calculate_social_optimum()
         poa = optimal_potential_function_value / self.actual_potential_function_value if self.actual_potential_function_value else float('inf')
         return poa
-    '''
+    
     #updateing game state after algorithm finishes
     def update_game_state_new(self):
         # Example method to update the game state based on current strategies
