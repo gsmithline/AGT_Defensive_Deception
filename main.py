@@ -3,12 +3,18 @@ from defender.defender import Defender
 from game.game import Game
 from attackers.attacker import Attacker
 import random
-import numpy
+import numpy as np
+import matplotlib.pyplot as plt
+
 #this file will be the main file that will run the game
 #Globals
-num_targets = 70
+'''
+Inititalization of game 
+_____________________________________________________________________________
+'''
+num_targets = 12
 #random game set up 
-game_rounds = 200
+game_rounds = 13
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
 rewards = [random.uniform(1, 5) for i in range(num_targets)]
 penalties = [random.uniform(1, 5) for i in range(num_targets)]
@@ -26,7 +32,7 @@ lambda_bound = .5
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 10):
+for i in range(1, 12):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker
@@ -43,101 +49,71 @@ for id in game.attacker_strategy_profile:
 for id, attacker  in attackers.items():
     attacker.attack_id = id
     attacker.actually_calc_utility(game)
+'''
+Inititalization of game 
+_____________________________________________________________________________
+'''
 
-print("original potential function value")
-game.calculate_potential_function_value(1)
-print(game.actual_potential_function_value)
- 
+
+#update lambda
 #test ibr
-game.ibr_attackers(10)  
+game.ibr_attackers(1000)  
 game.calculate_potential_function_value(1)
-print(game.actual_potential_function_value)
+print(f"actual potential function value: {game.actual_potential_function_value}")
 #update lambda
 defender.update_lambda_value(list(game.past_potential_function_values.values()))
-print(defender.lambda_value)
+print(f"lambda value updated: {defender.lambda_value}")
 #test qr defender 
 defender.quantal_response(defender.lambda_value, game)
-print(defender.expected_congestion)
-
+print(f"expected congestion updated: {defender.expected_congestion}")
 #test strategy computation defender
 defender.optimize_strategy(targets, defender.expected_congestion)
-print(defender.mixed_strategy)
+print(f"new defender mixed strategy updated: {defender.mixed_strategy}")
 #test defender expected utility
 defender.calculate_utility(game)
-print(defender.past_utilities)
-game.calculate_potential_function_value(1)
-print(game.actual_potential_function_value)
-#calculate price of anarchy
+print(f"new past utilities updated: {defender.past_utilities}")
+game.calculate_potential_function_value(2)
+print(f"actual potential function value: {game.actual_potential_function_value}")
 game.price_of_anarchy()
 print(game.current_poa)
+#calculate price of anarchy
+#game.price_of_anarchy()
+#print(game.current_poa)
+for i in range(3, game_rounds):
+    game.ibr_attackers(1000)  
+    game.calculate_potential_function_value(1)
+    print(f"actual potential function value: {game.actual_potential_function_value}")
+    #update lambda
+    defender.update_lambda_value(list(game.past_potential_function_values.values()))
+    print(f"lambda value updated: {defender.lambda_value}")
+    #test qr defender 
+    defender.quantal_response(defender.lambda_value, game)
+    print(f"expected congestion updated: {defender.expected_congestion}")
+    #test strategy computation defender
+    defender.optimize_strategy(targets, defender.expected_congestion)
+    print(f"new defender mixed strategy updated: {defender.mixed_strategy}")
+    #test defender expected utility
+    defender.calculate_utility(game)
+    print(f"new past utilities updated: {defender.past_utilities}")
+    game.calculate_potential_function_value(i)
+    print(f"actual potential function value: {game.actual_potential_function_value}")
+    game.price_of_anarchy()
+    print(game.best_potential_function_value)
+    print(game.current_poa)
 
+#graph POA
+plt.plot(game.past_poa)
+plt.xlabel('Game Rounds')
+plt.ylabel('Price of Anarchy')
+plt.title('Price of Anarchy Value Over Time')
+plt.show()
 
-#
+#graph potential function value
+plt.plot(game.past_potential_function_values.values())
+plt.xlabel('Game Rounds')
+plt.ylabel('Potential Function Value')
+plt.title('Potential Function Value Over Time')
+plt.show()
 
-'''
-
-#test bayesian
-test_observed_potentuals = [random.uniform(1, 10) for i in range(num_targets)] 
-defender.update_lambda_value(test_observed_potentuals)
-print(defender.lambda_value)
-for i in range(0, 1000):
-    test_observed_potentuals.append(random.uniform(1, 10))
-    defender.update_lambda_value(test_observed_potentuals)
-    print("lambda value: ", defender.lambda_value)
-
-#test strategy computation
-test_qr = [random.uniform(-200, 100) for i in range(num_targets)]
-defender.optimize_strategy(targets, test_qr)
-print(defender.mixed_strategy)
-#test update game state
-for target in game.game_state.values():
-    target.defender_strategy = defender.mixed_strategy[target.name]
-
-#test defender utility calculation 
-defender.calculate_utility(game)
-print(defender.past_utilities)
-    
-#test attacker 
-#test utility
-for attacker in game.attackers.values():
-    attacker.calculate_expected_utility(target, game.defender.mixed_strategy, game.attacker_strategy_profile)
-    print(attacker.expected_utilities)
-#test optimize strategy
-for attacker in game.attackers.values():
-    attacker.optimize_mixed_strategy(game)
-    print(attacker.current_strategy)
-
-#test potential function
-game.calculate_potential_function_value(1)
-print(game.actual_potential_function_value)
-
-defender.update_lambda_value(list(game.past_potential_function_values.values()))
-print(defender.lambda_value)
-#test strategy computation
-test_qr = [random.uniform(-200, 10000) for i in range(num_targets)]
-defender.optimize_strategy(targets, test_qr)
-print(defender.mixed_strategy)
-#test update game state
-for target in game.game_state.values():
-    target.defender_strategy = defender.mixed_strategy[target.name]
-
-#test defender utility calculation 
-defender.calculate_utility(game)
-print(defender.past_utilities)
-
-
-
-
-
-
-
-#game loop 
-
-#for i in range(game_rounds):
-
-
-
- 
-'''
 
 

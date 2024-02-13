@@ -7,6 +7,7 @@ from scipy.integrate import quad, IntegrationWarning
 import warnings
 import random
 import copy
+np.random.seed(42)
 class Game:
     def __init__(self, targets, rewards, congestions, penalties, defender, attackers):
         self.defender = defender
@@ -20,6 +21,8 @@ class Game:
         self.average_potential_for_attacker = None #some scalar value for the potential function
         self.past_poa = []
         self.current_poa = None
+        self.social_optimum_strategy = None
+        self.best_potential_function_value = None
 
 
     def update_game_state(self, new_game_state):
@@ -36,7 +39,7 @@ class Game:
 
         pass
     
-    def ibr_attackers(self, max_iterations, epsilon=1):
+    def ibr_attackers(self, max_iterations, epsilon=2):
         # Computes epsilon Nash for attackers
         # This is the attackers' actual congestion game
         none_can_deviate = False
@@ -151,97 +154,71 @@ class Game:
         computed_poa = self.actual_potential_function_value
         #optimal potential function value
         #now we have defender strategy, compute optimal potential function value
-        optimal_potential_function_value = self.calculate_social_optimum()
-        poa = optimal_potential_function_value / computed_poa 
+        best_strategy = self.calculate_social_optimum()
+        self.social_optimum_strategy = best_strategy[0] 
+        self.best_potential_function_value = best_strategy[1]
+        poa = self.best_potential_function_value / computed_poa 
         self.past_poa.append(poa)
         self.current_poa = poa
 
-             
-   
-    def calculate_social_optimum(self):
-        num_targets = len(self.game_state)
+  
+
+
+    def calculate_social_optimum(game):
+        num_targets = len(game.game_state)
+        num_attackers = len(game.attackers)
+
+        # Flatten the matrix into a single vector for optimization
+        initial_guess = np.repeat(1/num_targets, num_targets * num_attackers)
+
+        # Define the objective function to maximize the potential utility
+        def potential_function(flat_strategy):
+            # Reshape the flat strategy vector back into a matrix
+            strategy_matrix = flat_strategy.reshape((num_attackers, num_targets))
+            total_utility = 0
+            for j, target in enumerate(game.game_state.values()):
+                n_j = np.sum(strategy_matrix[:, j])  # Sum of probabilities targeting j across all attackers
+                hat_x_j = target.defender_strategy
+                utility = (1 - hat_x_j) * target.reward**2 - hat_x_j * target.penalty - target.congestion_cost * n_j**2
+                total_utility += utility * n_j
+            return -total_utility  # Objective is to maximize total utility
+
+        # Constraints: Each attacker's strategy must sum to 1
+        def constraint(flat_strategy):
+            strategy_matrix = flat_strategy.reshape((num_attackers, num_targets))
+            return np.array([np.sum(strategy_matrix[i, :]) - 1 for i in range(num_attackers)])
         
-        # Objective function for the total potential function to be maximized
-        def total_potential_function(strategy_vector):
-            # Assume strategy_vector is a flattened array of probabilities for each target
-            potential_value = 0
-            for j, target in enumerate(self.game_state.values()):
-                # Calculate the utility of each target based on the attacker's strategy
-                # Here, we consider the strategy_vector directly as the collective strategy of all attackers
-                utility = self.calculate_total_utility_for_target(target, strategy_vector[j], self.defender.mixed_strategy)
-                potential_value += utility
-            return -potential_value  # Minimize the negative to maximize
-        
-        # Initial guess (uniform distribution across targets)
-        initial_guess = np.ones(num_targets) / num_targets
-        
-        # Constraints: The sum of probabilities across all targets must equal 1
-        cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
-        
-        # Bounds for each probability in the strategy
-        bounds = [(0, 1) for _ in range(num_targets)]
-        
+        cons = ({'type': 'eq', 'fun': constraint})
+
+        # Bounds for each element in the strategy matrix
+        bounds = [(0, 1) for _ in range(num_targets * num_attackers)]
+
         # Solve the optimization problem
-        result = minimize(total_potential_function, initial_guess, method='SLSQP', bounds=bounds, constraints=[cons])
-        
-        if not result.success:
-            raise ValueError("Optimization failed:", result.message)
-        
-        optimal_strategy = result.x
-        optimal_potential_value = -result.fun  # Convert back to maximization value
+        result = minimize(potential_function, initial_guess, method='SLSQP', bounds=bounds, constraints=[cons])
 
-        
-        # Here, calculate_total_utility_for_target needs to be defined to calculate the utility
-        # for a target based on the combined strategy of all attackers and the current defender strategy.
-        '''
-        def calculcate_optimal_potential_function_value(optimal_strategy, defender_strategy):
-            #copy current strategy profile 
-            attacker_strategy_profile = copy.deepcopy(self.attacker_strategy_profile)
-            #fill it with optimal strategy
-            for attacker_id, attacker in self.attackers.items():
-                attacker_strategy_profile[attacker_id] = optimal_strategy[]
-            #copy game state
-            game_state = copy.deepcopy(self.game_state)
-
-            #fill it with optimal strategy
-
-            optimal_potential_function_value = 0
-
-            for target in self.game_state.values():
-                for attacker_id, attacker in self.attackers.items():
-                    y_ij = attacker.current_strategy[target.name]
-                    U_ij = attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
-                    optimal_potential_function_value += y_ij * U_ij
-            return optimal_potential_function_value
-        '''
-            
-        
-        return optimal_potential_value, optimal_strategy
+        if result.success:
+            optimal_strategy_matrix = result.x.reshape((num_attackers, num_targets))
+            optimal_potential_value = -result.fun
+            return optimal_strategy_matrix, optimal_potential_value
+        else:
+            raise ValueError("Optimization failed: " + result.message)
 
 
-
-
-    pass
-
-    def price_of_anarchy(self):
-        optimal_potential_function_value = self.calculate_social_optimum()
-        poa = optimal_potential_function_value / self.actual_potential_function_value if self.actual_potential_function_value else float('inf')
-        return poa
-    
+   
     #updateing game state after algorithm finishes
     def update_game_state_new(self):
-        # Example method to update the game state based on current strategies
         for target_id, target in self.game_state.items():
             # Update defender strategy for each target
             #defender mixed strategy is array of probabilities for each target
 
-            target.update_defender_strategy(self.defender.mixed_strategy[target_id-1])
+            target.update_defender_strategy(self.defender.mixed_strategy[target_id])
             
             # Update attacker strategies for each target
             attacker_strategies = {attacker_id: attacker.current_strategy[target_id] for attacker_id, attacker in self.attackers.items()}
             target.update_attacker_strategies(attacker_strategies)
             # Calculate new congestion based on attacker strategies
             target.congestion = sum(attacker_strategies.values())
+
     
     #should be called after attackers play their strategies
     def calculate_potential_function_value(self, game_state):
@@ -253,7 +230,6 @@ class Game:
                 # Probability of this attacker targeting this target
                 y_ij = attacker.current_strategy[target.name]
                 # Utility for attacker i when choosing target j
-                # Assuming calculate_expected_utility function calculates U_{ij} for a given target
                 U_ij = attacker.calculate_expected_utility(target, self.defender.mixed_strategy, self.attacker_strategy_profile)
                 # Add to the potential function value
                 potential_function_value += y_ij * U_ij

@@ -5,7 +5,7 @@ import random
 from scipy.stats import beta, norm, gamma
 from scipy.integrate import quad, IntegrationWarning
 import warnings
-
+np.random.seed(42)
 
 class Defender:
     def __init__(self, num_targets, initial_beliefs, lambda_bound):
