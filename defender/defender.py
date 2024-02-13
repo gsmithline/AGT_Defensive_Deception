@@ -18,6 +18,7 @@ class Defender:
         self.lambda_scale = 1  # Scale parameter for the gamma distribution
         self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
 
+        self.past_lambda_values = []
         self.lambda_value = self.lambda_bound #fix this later
         self.past_utilities = []
         
@@ -50,6 +51,7 @@ class Defender:
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
         self.lambda_value = new_lambda
+        self.past_lambda_values.append(new_lambda)
         return self.lambda_value
 
 

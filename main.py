@@ -115,5 +115,11 @@ plt.ylabel('Potential Function Value')
 plt.title('Potential Function Value Over Time')
 plt.show()
 
+#defender lambda
+plt.plot(defender.past_lambda_values)
+plt.xlabel('Game Rounds')
+plt.ylabel('Lambda Value')
+plt.title('Lambda Value Over Time')
+plt.show()
 
 
