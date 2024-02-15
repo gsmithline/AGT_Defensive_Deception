@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 Inititalization of game 
 _____________________________________________________________________________
 '''
-num_targets = 12
+num_targets = 20
 #random game set up 
-game_rounds = 13
+game_rounds = 12
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
 rewards = [random.uniform(1, 5) for i in range(num_targets)]
 penalties = [random.uniform(1, 5) for i in range(num_targets)]
@@ -53,36 +53,7 @@ for id, attacker  in attackers.items():
 Inititalization of game 
 _____________________________________________________________________________
 '''
-
-
-#update lambda
-#test ibr
-game.ibr_attackers(1000)  
-game.calculate_potential_function_value(1)
-print(f"actual potential function value: {game.actual_potential_function_value}")
-#update lambda
-defender.update_lambda_value(list(game.past_potential_function_values.values()))
-print(f"lambda value updated: {defender.lambda_value}")
-#test qr defender 
-defender.quantal_response(defender.lambda_value, game)
-print(f"expected congestion updated: {defender.expected_congestion}")
-#test strategy computation defender
-defender.optimize_strategy(targets, defender.expected_congestion)
-print(f"new defender mixed strategy updated: {defender.mixed_strategy}")
-#test defender expected utility
-defender.calculate_utility(game)
-print(f"new past utilities updated: {defender.past_utilities}")
-game.calculate_potential_function_value(2)
-print(f"actual potential function value: {game.actual_potential_function_value}")
-game.price_of_anarchy()
-print(game.current_poa)
-#calculate price of anarchy
-#game.price_of_anarchy()
-#print(game.current_poa)
-for i in range(3, game_rounds):
-    game.ibr_attackers(1000)  
-    game.calculate_potential_function_value(1)
-    print(f"actual potential function value: {game.actual_potential_function_value}")
+for i in range(1, game_rounds):
     #update lambda
     defender.update_lambda_value(list(game.past_potential_function_values.values()))
     print(f"lambda value updated: {defender.lambda_value}")
@@ -95,6 +66,7 @@ for i in range(3, game_rounds):
     #test defender expected utility
     defender.calculate_utility(game)
     print(f"new past utilities updated: {defender.past_utilities}")
+    game.ibr_attackers(1000)  
     game.calculate_potential_function_value(i)
     print(f"actual potential function value: {game.actual_potential_function_value}")
     game.price_of_anarchy()

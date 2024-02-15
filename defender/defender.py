@@ -42,10 +42,10 @@ class Defender:
         normalization_factor, _ = quad(full_bayesian_fraction, 0, 1) #ensures posterior sums to 1
            
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
-        new_lambda = expected_lambda / normalization_factor if expected_lambda > 0 else self.lambda_bayes.mean()
+        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         
         updated_shape = self.lambda_shape + len(observed_potentials)
-        updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials))
+        updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
 
         self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
         self.lambda_shape = updated_shape
