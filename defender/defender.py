@@ -50,7 +50,13 @@ class Defender:
         self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-        self.lambda_value = new_lambda
+        '''
+        if new_lambda > self.lambda_bound:
+            self.lambda_value = new_lambda
+        else:
+            self.lambda_value = self.lambda_bound
+        '''
+        self.lambda_value = self.lambda_bound
         self.past_lambda_values.append(new_lambda)
         return self.lambda_value
 

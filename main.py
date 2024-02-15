@@ -12,9 +12,11 @@ import matplotlib.pyplot as plt
 Inititalization of game 
 _____________________________________________________________________________
 '''
-num_targets = 20
+np.random.seed(42)
+num_targets = 50
 #random game set up 
-game_rounds = 12
+game_rounds = 10
+num_attackers = 12
 cogestion_costs = [random.randint(1, 5) for i in range(num_targets)]
 rewards = [random.uniform(1, 5) for i in range(num_targets)]
 penalties = [random.uniform(1, 5) for i in range(num_targets)]
@@ -26,13 +28,13 @@ for i in range(num_targets):
     targets[target.name] = target  #add target to dictionary of targets
 #set up game and fill targets, this is what will be updated
 #set up defender
-initial_beliefs = [random.uniform(1, 10) for i in range(num_targets)]
+initial_beliefs = [random.uniform(1, num_attackers+1) for i in range(num_targets)]
 
-lambda_bound = .5
+lambda_bound = 30
 defender = Defender(num_targets, initial_beliefs, lambda_bound)
 attackers = {}
 #set up attackers
-for i in range(1, 12):
+for i in range(1, num_attackers + 1):
     attacker = Attacker()
     attacker.attack_id = i
     attackers[i] = attacker
@@ -73,6 +75,11 @@ for i in range(1, game_rounds):
     print(game.best_potential_function_value)
     print(game.current_poa)
 
+
+averge_poa = sum(game.past_poa)/len(game.past_poa) 
+print("_"*50) 
+print(f"Percent System Working Optimally: {1/averge_poa}")
+print("_"*50)
 #graph POA
 plt.plot(game.past_poa)
 plt.xlabel('Game Rounds')
@@ -93,5 +100,13 @@ plt.xlabel('Game Rounds')
 plt.ylabel('Lambda Value')
 plt.title('Lambda Value Over Time')
 plt.show()
+
+#defender utility
+plt.plot(defender.past_utilities)
+plt.xlabel('Game Rounds')
+plt.ylabel('Defender Utility')
+plt.title('Defender Utility Over Time')
+plt.show()
+
 
 
