@@ -50,7 +50,7 @@ class Attacker:
         attackers_at_target = [attacker_strategy[target.name] for attacker_strategy in all_strategies.values()]
         n_j = sum(attackers_at_target)
         
-        utility = (1 - hat_x_j) * R_j**2 - hat_x_j * P_j - c_j * n_j*2
+        utility = (1 - hat_x_j) * R_j**2 - hat_x_j * P_j - c_j * n_j**2
         return utility
 
     def optimize_mixed_strategy(self, game, POA = False):
@@ -82,3 +82,4 @@ class Attacker:
 
     def get_mixed_strategy(self):
         return self.current_strategy
+    

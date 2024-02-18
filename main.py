@@ -16,20 +16,20 @@ _____________________________________________________________________________
 np.random.seed(42)
 num_targets = 10
 #random game set up 
-epsilon = 1
+epsilon = 9
 game_rounds = 10
 num_attackers = 12
 poa_results_avg = []
 lambda_results_avg = []
 potent_function_results_avg = []
 defender_utility_results_avg = []
-lambda_range=(0, 10)
+lambda_range=(1000, float('inf'))
 cogestion_costs = [random.randint(1, 10) for i in range(num_targets)]
 rewards = [random.uniform(1, 10) for i in range(num_targets)]
 penalties = [random.uniform(1, 10) for i in range(num_targets)]
 initial_beliefs = [random.uniform(1, num_attackers+1) for i in range(num_targets)]
-lambda_bound = 10
-for i in range(1, 221):
+
+for i in range(1, 11):
     #set up game and fill targets, this is what will be updated 
     targets = {}
     for i in range(num_targets):
@@ -38,7 +38,7 @@ for i in range(1, 221):
         targets[target.name] = target  #add target to dictionary of targets
     #set up game and fill targets, this is what will be updated
     #set up defender
-    defender = Defender(num_targets, initial_beliefs, lambda_bound)
+    defender = Defender(num_targets, initial_beliefs, lambda_range)
     attackers = {}
     #set up attackers
     for i in range(1, num_attackers + 1):

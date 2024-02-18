@@ -8,21 +8,20 @@ import warnings
 np.random.seed(42)
 
 class Defender:
-    def __init__(self, num_targets, initial_beliefs, lambda_bound, lambda_range=(0, 10)):
+    def __init__(self, num_targets, initial_beliefs, lambda_range=(0, 10)):
         self.num_targets = num_targets
         self.beliefs_congestion = initial_beliefs
-        self.lambda_bound = lambda_bound
         self.mixed_strategy = [1 / num_targets] * num_targets
 
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1  # Scale parameter for the gamma distribution
         self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
 
-        self.past_lambda_values = []
-        self.lambda_value = self.lambda_bound #fix this later
+        self.past_lambda_values = [] #fix this later
         self.past_utilities = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
         self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
+        self.lambda_value = self.lambda_max
         
     
     def update_lambda_value(self, observed_potentials):
@@ -58,7 +57,6 @@ class Defender:
 
         self.lambda_value = new_lambda
         
-        #self.lambda_value = self.lambda_bound
         self.past_lambda_values.append(new_lambda)
         return self.lambda_value
 
@@ -153,3 +151,4 @@ class Defender:
 
     def get_mixed_strategy(self):
         return self.mixed_strategy
+
