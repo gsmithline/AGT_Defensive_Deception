@@ -23,7 +23,8 @@ poa_results_avg = []
 lambda_results_avg = []
 potent_function_results_avg = []
 defender_utility_results_avg = []
-lambda_range=(1000, float('inf'))
+percent_system_working_optimally = []
+lambda_range=(10, 50)
 cogestion_costs = [random.randint(1, 10) for i in range(num_targets)]
 rewards = [random.uniform(1, 10) for i in range(num_targets)]
 penalties = [random.uniform(1, 10) for i in range(num_targets)]
@@ -62,7 +63,7 @@ for i in range(1, 11):
     Inititalization of game 
     _____________________________________________________________________________
     '''
-
+    percent_system_working_optimally_inner = []
     for i in range(1, game_rounds + 1):
         #update lambda
         defender.update_lambda_value(list(game.past_potential_function_values.values()))
@@ -82,7 +83,8 @@ for i in range(1, 11):
         game.price_of_anarchy()
         print(game.best_potential_function_value)
         print(game.current_poa)
-
+        percent_system_working_optimally_inner.append(1/game.current_poa)
+    
     average_defender_utility = sum(defender.past_utilities)/len(defender.past_utilities)
     defender_utility_results_avg.append(average_defender_utility)
     averge_poa = sum(game.past_poa)/len(game.past_poa) 
@@ -91,8 +93,12 @@ for i in range(1, 11):
     lambda_results_avg.append(avgerage_lambda)
     avgerage_potential_function = sum(game.past_potential_function_values.values())/len(game.past_potential_function_values.values())
     potent_function_results_avg.append(avgerage_potential_function)
+    average_percent_system_working_optimally = sum(percent_system_working_optimally_inner)/len(percent_system_working_optimally_inner)
+    percent_system_working_optimally.append(average_percent_system_working_optimally)
 
-df = pd.DataFrame({'POA': poa_results_avg, 'Lambda': lambda_results_avg, 'Potential Function': potent_function_results_avg, 'Defender Utility': defender_utility_results_avg})
+df = pd.DataFrame({'POA': poa_results_avg, 'Lambda': lambda_results_avg, 'Potential Function': potent_function_results_avg, 
+                   'Defender Utility': defender_utility_results_avg,
+                   'Percent System Working Optimally': percent_system_working_optimally})
 print(df)
 print("_"*50)
 print("Descriptive Statistics:")
@@ -157,6 +163,23 @@ plt.xlabel('Game Rounds')
 plt.ylabel('Defender Utility')
 plt.title('Defender Utility Over Time')
 plt.show()
+
+#graph percent system working optimally
+plt.plot(percent_system_working_optimally)
+plt.xlabel('Game Rounds')
+plt.ylabel('Average Percent System Working Optimally')
+plt.title('Averge Percent System Working Optimally Over Time')
+plt.show()
+
+#lambda vs PoA
+plt.scatter(lambda_results_avg, poa_results_avg)
+a, b = np.polyfit(lambda_results_avg, poa_results_avg, 1)
+plt.plot(lambda_results_avg, a*np.array(lambda_results_avg) + b, color='red')
+plt.xlabel('Lambda Value')
+plt.ylabel('Price of Anarchy')
+plt.title('Lambda Value vs Price of Anarchy')
+plt.show()
+
 
 
 
