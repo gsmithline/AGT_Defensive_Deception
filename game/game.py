@@ -39,7 +39,7 @@ class Game:
 
         pass
     
-    def ibr_attackers(self, max_iterations, epsilon=10):
+    def ibr_attackers(self, max_iterations, epsilon=9):
         # Computes epsilon Nash for attackers
         # This is the attackers' actual congestion game
         none_can_deviate = False

@@ -8,7 +8,7 @@ import warnings
 np.random.seed(42)
 
 class Defender:
-    def __init__(self, num_targets, initial_beliefs, lambda_bound):
+    def __init__(self, num_targets, initial_beliefs, lambda_bound, lambda_range=(0, 10)):
         self.num_targets = num_targets
         self.beliefs_congestion = initial_beliefs
         self.lambda_bound = lambda_bound
@@ -21,6 +21,8 @@ class Defender:
         self.past_lambda_values = []
         self.lambda_value = self.lambda_bound #fix this later
         self.past_utilities = []
+        self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
+        self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
         
     
     def update_lambda_value(self, observed_potentials):
@@ -50,13 +52,13 @@ class Defender:
         self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-        '''
-        if new_lambda > self.lambda_bound:
-            self.lambda_value = new_lambda
-        else:
-            self.lambda_value = self.lambda_bound
-        '''
-        self.lambda_value = self.lambda_bound
+        
+        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
+        self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min)  # Ensure lambda stays within bounds
+
+        self.lambda_value = new_lambda
+        
+        #self.lambda_value = self.lambda_bound
         self.past_lambda_values.append(new_lambda)
         return self.lambda_value
 
