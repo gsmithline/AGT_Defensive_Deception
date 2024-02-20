@@ -6,6 +6,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 #this file will be the main file that will run the game
 #Globals
@@ -24,13 +25,13 @@ lambda_results_avg = []
 potent_function_results_avg = []
 defender_utility_results_avg = []
 percent_system_working_optimally = []
-lambda_range=(10, 50)
+lambda_range=(2, 2) # (0, 1) and (0, float('inf')) (3, 3) ENTIRELY RATIONA
 cogestion_costs = [random.randint(1, 10) for i in range(num_targets)]
 rewards = [random.uniform(1, 10) for i in range(num_targets)]
 penalties = [random.uniform(1, 10) for i in range(num_targets)]
 initial_beliefs = [random.uniform(1, num_attackers+1) for i in range(num_targets)]
 
-for i in range(1, 11):
+for i in range(1, 10):
     #set up game and fill targets, this is what will be updated 
     targets = {}
     for i in range(num_targets):
@@ -180,7 +181,19 @@ plt.ylabel('Price of Anarchy')
 plt.title('Lambda Value vs Price of Anarchy')
 plt.show()
 
+#correlation heat map
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Matrix Heatmap')
+plt.show()
 
+# Example for PoA across different ranges of Lambda
+sns.boxplot(data=df, x='Lambda', y='POA')
+plt.title('Price of Anarchy Across Lambda Ranges')
+plt.show()
+
+
+sns.pairplot(df)
+plt.show()
 
 
 
