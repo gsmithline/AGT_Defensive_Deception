@@ -15,7 +15,7 @@ Inititalization of game
 _____________________________________________________________________________
 '''
 np.random.seed(42)
-num_targets = 10
+num_targets = 12
 #random game set up 
 epsilon = 9
 game_rounds = 10
@@ -25,14 +25,18 @@ lambda_results_avg = []
 potent_function_results_avg = []
 defender_utility_results_avg = []
 percent_system_working_optimally = []
-lambda_range=(2, 2) # (0, 1) and (0, float('inf')) (3, 3) ENTIRELY RATIONA
-cogestion_costs = [random.randint(1, 10) for i in range(num_targets)]
+lambda_range=(.5, 2) # (0, 1) and (0, float('inf')) (3, 3) ENTIRELY RATIONA
+congestion_costs = [random.randint(1, 10) for i in range(num_targets)]
+print(f"congestion costs: {congestion_costs}")
 rewards = [random.uniform(1, 10) for i in range(num_targets)]
+print(f"rewards: {rewards}")
 penalties = [random.uniform(1, 10) for i in range(num_targets)]
+print(f"penalties: {penalties}")
 initial_beliefs = [random.uniform(1, num_attackers+1) for i in range(num_targets)]
-
+print(f"initial beliefs: {initial_beliefs}")
 for i in range(1, 10):
     #set up game and fill targets, this is what will be updated 
+    '''
     targets = {}
     for i in range(num_targets):
         #filler 0 for now
@@ -44,7 +48,7 @@ for i in range(1, 10):
     attackers = {}
     #set up attackers
     for i in range(1, num_attackers + 1):
-        attacker = Attacker()
+        attacker = Attacker(num_targets)
         attacker.attack_id = i
         attackers[i] = attacker
     #set up gam
@@ -60,6 +64,14 @@ for i in range(1, 10):
     for id, attacker  in attackers.items():
         attacker.attack_id = id
         attacker.actually_calc_utility(game)
+    '''
+    targets = {j: Target(j, congestion_costs[j], rewards[j], penalties[j], 0, 0, 0) for j in range(num_targets)}
+    
+    # Assuming Defender and Attacker classes take the necessary initialization parameters
+    defender = Defender(num_targets, initial_beliefs, lambda_range)
+    attackers = {k: Attacker(num_targets) for k in range(1, num_attackers + 1)}  # Corrected loop var
+
+    game = Game(targets, rewards, congestion_costs, penalties, defender, attackers)
     '''
     Inititalization of game 
     _____________________________________________________________________________
