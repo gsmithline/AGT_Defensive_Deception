@@ -157,6 +157,12 @@ class Game:
         best_strategy = self.calculate_social_optimum()
         self.social_optimum_strategy = best_strategy[0] 
         self.best_potential_function_value = best_strategy[1]
+        '''
+        if self.best_potential_function_value < computed_poa:
+            self.best_potential_function_value = computed_poa
+            self.social_optimum_strategy = self.attacker_strategy_profile
+        
+        '''
         poa = self.best_potential_function_value / computed_poa 
         self.past_poa.append(poa)
         self.current_poa = poa

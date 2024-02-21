@@ -9,14 +9,14 @@ from scipy.optimize import minimize
 from scipy.optimize import Bounds
 np.random.seed(42)
 class Attacker:
-    def __init__(self, num_targets):
-        value = np.random.rand(num_targets)
-        self.current_strategy = value / np.sum(value)#np.ones(num_targets) / num_targets #dict with mixed strategy at each target labeld for house keeping
+    def __init__(self, num_targets, attack_id):
+        #value = np.random.rand(num_targets)
+        self.current_strategy = np.ones(num_targets) / num_targets # value / np.sum(value) dict with mixed strategy at each target labeld for house keeping
         self.expected_utilities = 0 #some float from utility calculation
         self.actual_utility = 0 #some float from utility calculation
         self.past_expected_utilities = []
         self.past_actual_utilities = []
-        self.attack_id = None #some int randomly assigned
+        self.attack_id = attack_id #some int randomly assigned
     
     def update_strategy(self, new_strategy):
         self.current_strategy = new_strategy

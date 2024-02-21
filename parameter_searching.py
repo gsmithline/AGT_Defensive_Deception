@@ -18,7 +18,8 @@ def run_simulation(lambda_range, epsilon, num_targets, num_attackers, seed=42):
 
     targets = {i: Target(i, congestion_costs[i], rewards[i], penalties[i], 0, 0, 0) for i in range(num_targets)}
     defender = Defender(num_targets, initial_beliefs, lambda_range)
-    attackers = {i: Attacker(num_targets) for i in range(1, num_attackers + 1)}
+    attackers = {i: Attacker(num_targets, i) for i in range(1, num_attackers + 1)}
+
 
     game = Game(targets, rewards, congestion_costs, penalties, defender, attackers)
 
@@ -55,7 +56,7 @@ def run_simulation(lambda_range, epsilon, num_targets, num_attackers, seed=42):
     avg_defender_utility = np.mean(defender_utility_results_avg)
 
     return avg_poa, avg_lambda, avg_potent_function, avg_defender_utility
-
+'''
 lambda_ranges = [(1, 3), (0, 2), (3, 3), (0, float('inf'))]
 epsilons = [1, 5, 9]
 num_targets_list = [10, 12]
@@ -81,9 +82,12 @@ plt.show()
 
 
 
-sns.pairplot(results_df)
+sns.pairplot(results_df.describe().T[['mean', 'std']])
 plt.show()
 
 sns.boxplot(data=results_df, x='Lambda Range', y='Avg POA')
 plt.title('Avg POA Across Different Lambda Ranges')
 plt.show()
+
+print(results_df.describe())
+'''
