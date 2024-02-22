@@ -35,7 +35,7 @@ initial_beliefs = np.ones(num_targets) / num_targets
 print(f"initial beliefs: {initial_beliefs}")
 for lambda_range in lambda_ranges:
     print(f"lambda range: {lambda_range}")
-    for i in range(1, 222):
+    for i in range(1, 1001):
         targets = {j: Target(j, congestion_costs[j], rewards[j], penalties[j], 0, 0, 0) for j in range(num_targets)}
         
         defender = Defender(num_targets, initial_beliefs, lambda_range)
