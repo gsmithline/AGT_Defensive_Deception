@@ -5,17 +5,22 @@ import random
 from scipy.stats import beta, norm, gamma
 from scipy.integrate import quad, IntegrationWarning
 import warnings
+import matplotlib.pyplot as plt
+import seaborn as sns
 np.random.seed(42)
 
 class Defender:
-    def __init__(self, num_targets, initial_beliefs, lambda_range=(0, 10)):
+    def __init__(self, num_targets, initial_beliefs, lambda_range=(0, 10), gamma_distribution=True):
         self.num_targets = num_targets
         self.beliefs_congestion = initial_beliefs
         self.mixed_strategy = [1 / num_targets] * num_targets
 
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1  # Scale parameter for the gamma distribution
-        self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
+        if gamma_distribution:
+            self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
+        else:
+            self.lambda_bayes = beta(a=1, b=1)
 
         self.past_lambda_values = [] #fix this later
         self.past_utilities = []
@@ -149,4 +154,10 @@ class Defender:
 
     def get_mixed_strategy(self):
         return self.mixed_strategy
+    
+    def graph_distribution_lambda(self):
+        past_lambdas = self.past_lambda_values
+        sns.kdeplot(past_lambdas, fill=True)
+        plt.show()
+
 
