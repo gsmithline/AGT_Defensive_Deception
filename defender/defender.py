@@ -2,21 +2,24 @@ import scipy.optimize as opt
 import numpy as np
 import math
 import random
-from scipy.stats import beta, norm, gamma
+from scipy.stats import beta, norm, gamma, gumbel_l, gumbel_r
 from scipy.integrate import quad, IntegrationWarning
 import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.optimize import linprog
+
 np.random.seed(42)
 
 class Defender:
-    def __init__(self, num_targets, initial_beliefs, lambda_range=(0, 10), gamma_distribution=True):
+    def __init__(self, num_targets, initial_beliefs, lambda_range=(0, 10), gamma_distribution=True, probability_distribution=True):
         self.num_targets = num_targets
         self.beliefs_congestion = initial_beliefs
         self.mixed_strategy = [1 / num_targets] * num_targets
-
+        self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
-        self.lambda_scale = 1  # Scale parameter for the gamma distribution
+        self.lambda_scale = 1
+        self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
         else:
@@ -24,6 +27,8 @@ class Defender:
 
         self.past_lambda_values = [] #fix this later
         self.past_utilities = []
+        self.best_response_utilities = []
+        self.best_response_mixed_strategy = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
         self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
         self.lambda_value = self.lambda_max
@@ -49,23 +54,31 @@ class Defender:
            
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
-        
-        updated_shape = self.lambda_shape + len(observed_potentials)
+        updated_shape = 0
+        if self.gamma_distribution:
+            updated_shape = self.lambda_shape + len(observed_potentials)
+        else: #keep shape at 1 or below
+            updated_shape = max(0, min(1, self.lambda_shape + len(observed_potentials)))
         updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
-
-        self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
+        if self.probability_distribution:
+            if self.gamma_distribution:
+                self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
+            else:
+                self.lambda_bayes = beta(a=updated_shape, b=1)
+        else:
+            self.lambda_bayes = 1
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
         
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
-        self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min)  # Ensure lambda stays within bounds
-        
-        self.past_lambda_values.append(new_lambda)
+        self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
+
+        self.past_lambda_values.append(self.lambda_value)
         return self.lambda_value
 
 
     def calculate_utility(self, game):
-        # Reset total utility at the start of calculation
+        # Reset total utility at the start ofcalculation
         total_utility = 0
 
         # Iterate over each target in the game state
@@ -146,10 +159,42 @@ class Defender:
                 self.mixed_strategy[target.name] = target.defender_strategy
         else:
             raise Exception("Optimization failed: " + result.message)
+    
+    def best_response(self, game):
+        # Objective function: Minimize the negative of the defender's utility
+        def objective(x):
+            total_utility = 0
+            for i, target in enumerate(game.game_state.values()):
+                c = target.congestion_cost
+                P = target.reward
+                R = target.penalty
+                n = target.congestion  # Assuming this can be calculated/updated beforehand
+                utility = x[i] * P - (1 - x[i]) * R - c * (n ** 2)
+                total_utility += utility
+            return -total_utility  # Negate because we want to maximize utility
         
+        # Constraints
+        # Sum of probabilities (defender's strategy for each target) must be 1
+        constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        
+        # Bounds for each decision variable (probability of defending each target)
+        bounds = [(0, 1) for _ in range(self.num_targets)]
+        
+        # Initial guess for the strategy
+        initial_guess = np.array([1 / self.num_targets] * self.num_targets)
+        
+        # Run optimization
+        result = opt.minimize(objective, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
+        
+        if result.success:
+            self.best_response_mixed_strategy = result.x
+            print("Best response strategy found:", self.best_response_mixed_strategy)
+            self.best_response_utilities.append(-result.fun)
+            return self.best_response_mixed_strategy
+        else:
+            raise ValueError("Optimization failed: " + result.message)
 
 
-        return self.mixed_strategy
 
 
     def get_mixed_strategy(self):

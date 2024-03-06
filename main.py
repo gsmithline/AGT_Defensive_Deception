@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from scipy import stats 
 
 #Globals
 '''
@@ -20,7 +21,7 @@ epsilon = 9
 game_rounds = 3
 num_attackers = 12
 num_targets = 10
-num_games = 100
+num_games = 10
 poa_results_avg = []
 lambda_results_avg = []
 potent_function_results_avg = []
@@ -34,7 +35,18 @@ totals_for_rounds = {
     'percent_optimal': {i: 0 for i in range(1, game_rounds + 1)},
     'lambda': {i: 0 for i in range(1, game_rounds + 1)}
 }
-lambda_ranges = [(.2, .8)] # (0, 1) and (0, float('inf')) (3, 3) ENTIRELY RATIONA
+results_for_each_game_round = {x: {} for x in range(1, game_rounds + 1)}
+for i in results_for_each_game_round.keys():
+    results_for_each_game_round[i] = {x: 0 for x in range(1, num_games + 1)}
+for i in results_for_each_game_round.keys():
+    for j in results_for_each_game_round[i].keys():
+        results_for_each_game_round[i][j] = {"defender_utility": 0, "poa": 0, "lambda": 0, 
+                                             "potential_function": 0, "percent_optimal": 0, 
+                                             "lambda_range": "", "defender best response utility": 0, 
+                                             "defender best response mixed strategy": 0, "defender best response lambda": 0, 
+                                             "defender best response poa": 0, "defender best response potential function": 0, 
+                                             "defender best response percent optimal": 0}
+lambda_ranges = [(0, .5)] # (.75, 1) and (.25, .75) (0, .5) ENTIRELY RATIONA
 congestion_costs = [random.randint(1, 10) for i in range(num_targets)]
 print(f"congestion costs: {congestion_costs}")
 rewards = [random.randint(1, 10) for i in range(num_targets)]
@@ -48,7 +60,7 @@ for lambda_range in lambda_ranges:
     for i in range(1, num_games + 1):
         targets = {j: Target(j, congestion_costs[j], rewards[j], penalties[j], 0, 0, 0) for j in range(num_targets)}
         
-        defender = Defender(num_targets, initial_beliefs, lambda_range)
+        defender = Defender(num_targets, initial_beliefs, lambda_range, gamma_distribution=True, probability_distribution=True)
         attackers = {k: Attacker(num_targets, k) for k in range(1, num_attackers + 1)}  # Corrected loop var
 
         game = Game(targets, rewards, congestion_costs, penalties, defender, attackers)
@@ -69,7 +81,10 @@ for lambda_range in lambda_ranges:
             print(f"new defender mixed strategy updated: {defender.mixed_strategy}")
             #test defender expected utility
             defender.calculate_utility(game)
-            print(f"new past utilities updated: {defender.past_utilities}")
+            print(f"new past utilities updated: {defender.past_utilities[-1]}")
+            #test best response
+            defender.best_response(game)
+            print(f"best response utility: {defender.best_response_utilities[-1]}")
             game.ibr_attackers(1000, epsilon)  
             game.calculate_potential_function_value(i)
             print(f"actual potential function value: {game.actual_potential_function_value}")
@@ -97,7 +112,7 @@ for lambda_range in lambda_ranges:
     averages_for_rounds = {}
     for key, round_totals in totals_for_rounds.items():
         averages_for_rounds[key] = {round_index: total / num_games for round_index, total in round_totals.items()}
-    '''
+    
     df = pd.DataFrame({'POA': poa_results_avg, 'Lambda': lambda_results_avg, 'Potential Function': potent_function_results_avg, 
                     'Defender Utility': defender_utility_results_avg,
                     'Percent System Working Optimally': percent_system_working_optimally})
@@ -215,8 +230,92 @@ for lambda_range in lambda_ranges:
     plt.show()
 
     defender.graph_distribution_lambda()
+    print("_"*50)
+    #Gumbel Distribution
+    print("_"*50)
+    print("Gumbel Distribution")
+
+    #Pearson Correlation
+    print("_"*50)
+    print("Pearson Correlation")
+    print(df.corr(method='pearson'))
+    print("_"*50)
+    print("Spearman Correlation")
+    print(df.corr(method='spearman'))
+    print("_"*50)
+
+    #LINEAR REGRESSION
+    print("_"*50)
+    print("Linear Regression")
+    print(np.polyfit(lambda_results_avg, poa_results_avg, 1))
+    plt.scatter(lambda_results_avg, poa_results_avg)
+    a, b = np.polyfit(lambda_results_avg, poa_results_avg, 1)
+    plt.plot(lambda_results_avg, a*np.array(lambda_results_avg) + b, color='red')
+    plt.xlabel('Lambda Value')
+    plt.ylabel('Price of Anarchy')
+    plt.title('Lambda Value vs Price of Anarchy')
+    plt.show()
+    print("_"*50)
+    # T-TEST all parameters comparing with eachother 
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.ttest_ind(df[i], df[j]))
+                print("_"*50)
+    
+    # ANOVA
+    for i in df.columns:
+        print(f"{i} vs All")
+        print(stats.f_oneway(df[i], df['Lambda']))
+        print("_"*50)
+
+    #Kruskal Wallis for all parameters
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.kruskal(df[i], df[j]))
+                print("_"*50)
+    
+    #Man Whitney U for all parameters
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.mannwhitneyu(df[i], df[j]))
+                print("_"*50)
+    
+    #U-Test for all parameters
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.ttest_ind(df[i], df[j]))
+                print("_"*50)
+    #Kendall Tau
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.kendalltau(df[i], df[j]))
+                print("_"*50)
+    
+    #Spearman Rank Correlation
+    for i in df.columns:
+        for j in df.columns:
+            if i != j:
+                print(f"{i} vs {j}")
+                print(stats.spearmanr(df[i], df[j]))
+                print("_"*50)
+    '''    #Senstivity Analysis
+    print("_"*50)
+    print("Sensitivity Analysis")
+    print(stats.sensitivity_analysis(df))
+    print("_"*50)
     '''
 
+'''
     #summary stats game rounds 
     averages = averages_for_rounds.copy()
     df = pd.DataFrame(averages)
@@ -305,4 +404,4 @@ for lambda_range in lambda_ranges:
 
     sns.pairplot(df)
     plt.show()
-
+'''

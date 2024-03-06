@@ -34,10 +34,6 @@ class Game:
     def update_attackers(self, new_attackers):
         self.attackers = new_attackers
     
-    def run_congestion_game(self):
-        #this runs the inner attacker congestion game
-
-        pass
     
     def ibr_attackers(self, max_iterations, epsilon=9):
         # Computes epsilon Nash for attackers
