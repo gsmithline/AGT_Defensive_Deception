@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats 
 
-#Globals
+
 '''
 Inititalization of game 
 _____________________________________________________________________________
@@ -27,7 +27,9 @@ lambda_results_avg = []
 potent_function_results_avg = []
 defender_utility_results_avg = []
 percent_system_working_optimally = []
-round_game_poa_average = {x: 0 for x in range(1, game_rounds + 1)}
+defender_best_response_utility_average = []
+distance_between_defender_and_actual_average = []
+totals_for_rounds = None
 totals_for_rounds = {
     'poa': {i: 0 for i in range(1, game_rounds + 1)},
     'potential_function': {i: 0 for i in range(1, game_rounds + 1)},
@@ -35,18 +37,8 @@ totals_for_rounds = {
     'percent_optimal': {i: 0 for i in range(1, game_rounds + 1)},
     'lambda': {i: 0 for i in range(1, game_rounds + 1)}
 }
-results_for_each_game_round = {x: {} for x in range(1, game_rounds + 1)}
-for i in results_for_each_game_round.keys():
-    results_for_each_game_round[i] = {x: 0 for x in range(1, num_games + 1)}
-for i in results_for_each_game_round.keys():
-    for j in results_for_each_game_round[i].keys():
-        results_for_each_game_round[i][j] = {"defender_utility": 0, "poa": 0, "lambda": 0, 
-                                             "potential_function": 0, "percent_optimal": 0, 
-                                             "lambda_range": "", "defender best response utility": 0, 
-                                             "defender best response mixed strategy": 0, "defender best response lambda": 0, 
-                                             "defender best response poa": 0, "defender best response potential function": 0, 
-                                             "defender best response percent optimal": 0}
-lambda_ranges = [(0, .5)] # (.75, 1) and (.25, .75) (0, .5) ENTIRELY RATIONA
+lambda_ranges = [(i/10, (i+1)/10) for i in range(10)]
+lambda_ranges.append((0, float('inf')) ) #no bounds
 congestion_costs = [random.randint(1, 10) for i in range(num_targets)]
 print(f"congestion costs: {congestion_costs}")
 rewards = [random.randint(1, 10) for i in range(num_targets)]
@@ -56,6 +48,20 @@ print(f"penalties: {penalties}")
 initial_beliefs = np.ones(num_targets) / num_targets
 print(f"initial beliefs: {initial_beliefs}")
 for lambda_range in lambda_ranges:
+    poa_results_avg = []
+    lambda_results_avg = []
+    potent_function_results_avg = []
+    defender_utility_results_avg = []
+    percent_system_working_optimally = []
+    defender_best_response_utility_average = []
+    distance_between_defender_and_actual_average = []
+    totals_for_rounds = {
+    'poa': {i: 0 for i in range(1, game_rounds + 1)},
+    'potential_function': {i: 0 for i in range(1, game_rounds + 1)},
+    'defender_utility': {i: 0 for i in range(1, game_rounds + 1)},
+    'percent_optimal': {i: 0 for i in range(1, game_rounds + 1)},
+    'lambda': {i: 0 for i in range(1, game_rounds + 1)}
+    }   
     print(f"lambda range: {lambda_range}")
     for i in range(1, num_games + 1):
         targets = {j: Target(j, congestion_costs[j], rewards[j], penalties[j], 0, 0, 0) for j in range(num_targets)}
@@ -85,12 +91,14 @@ for lambda_range in lambda_ranges:
             #test best response
             defender.best_response(game)
             print(f"best response utility: {defender.best_response_utilities[-1]}")
+            game.difference_defender_utilities()
             game.ibr_attackers(1000, epsilon)  
             game.calculate_potential_function_value(i)
             print(f"actual potential function value: {game.actual_potential_function_value}")
             game.price_of_anarchy()
             print(game.best_potential_function_value)
             print(game.current_poa)
+            
             percent_system_working_optimally_inner.append(1/game.current_poa)
             totals_for_rounds['poa'][i] += game.current_poa
             totals_for_rounds['potential_function'][i] += game.actual_potential_function_value
@@ -98,6 +106,8 @@ for lambda_range in lambda_ranges:
             totals_for_rounds['percent_optimal'][i] += 1 / game.current_poa
             totals_for_rounds['lambda'][i] += defender.lambda_value
         
+        distance_between_defender_and_actual_average.append(sum(game.diff_in_utilities_defender)/len(game.diff_in_utilities_defender))  
+        defender_best_response_utility_average.append(sum(defender.best_response_utilities)/len(defender.best_response_utilities))
         average_defender_utility = sum(defender.past_utilities)/len(defender.past_utilities)
         defender_utility_results_avg.append(average_defender_utility)
         averge_poa = sum(game.past_poa)/len(game.past_poa) 
@@ -115,7 +125,8 @@ for lambda_range in lambda_ranges:
     
     df = pd.DataFrame({'POA': poa_results_avg, 'Lambda': lambda_results_avg, 'Potential Function': potent_function_results_avg, 
                     'Defender Utility': defender_utility_results_avg,
-                    'Percent System Working Optimally': percent_system_working_optimally})
+                    'Percent System Working Optimally': percent_system_working_optimally,
+                    'Defender Best Response Utility': defender_best_response_utility_average})
     print(df)
     print("_"*50)
     print("Descriptive Statistics:")
@@ -308,6 +319,16 @@ for lambda_range in lambda_ranges:
                 print(f"{i} vs {j}")
                 print(stats.spearmanr(df[i], df[j]))
                 print("_"*50)
+
+    #difference between defender actual utility vs. best response utility dot plot
+    print("_"*50)
+    print("Difference between Defender Actual Utility vs. Best Response Utility")
+    plt.scatter(defender_utility_results_avg, defender_best_response_utility_average)
+    plt.xlabel('Defender Utility')
+    plt.ylabel('Defender Best Response Utility')
+    plt.title('Difference between Defender Actual Utility vs. Best Response Utility')
+    plt.show()
+
     '''    #Senstivity Analysis
     print("_"*50)
     print("Sensitivity Analysis")

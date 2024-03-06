@@ -23,6 +23,7 @@ class Game:
         self.current_poa = None
         self.social_optimum_strategy = None
         self.best_potential_function_value = None
+        self.diff_in_utilities_defender = []
 
 
     def update_game_state(self, new_game_state):
@@ -239,6 +240,11 @@ class Game:
         self.past_potential_function_values[game_state] = potential_function_value
         self.average_potential_for_attacker = potential_function_value / len(self.attackers)
         return potential_function_value
+    
+    def difference_defender_utilities(self):
+        defender = self.defender
+        difference = defender.best_response_utilities[-1] - defender.past_utilities[-1]
+        self.diff_in_utilities_defender.append(difference)
     
     
 
