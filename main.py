@@ -17,11 +17,11 @@ _____________________________________________________________________________
 np.random.seed(42)
 num_targets = 12
 #random game set up 
-epsilon = 9
+epsilon = 10
 game_rounds = 3
 num_attackers = 12
-num_targets = 5
-num_games = 10
+num_targets = 10
+num_games = 10000
 
 lambda_ranges = [(i/10, (i+1)/10) for i in range(10)]
 lambda_ranges.append((0, float('inf')) ) #no bounds
@@ -87,4 +87,6 @@ for lambda_range in lambda_ranges:
                 'Distance Between Defender and Actual': game.diff_in_utilities_defender[-1],
                 'Lambda Value': defender.lambda_value}, ignore_index=True)
             
- 
+
+
+results.to_csv('results.csv')
