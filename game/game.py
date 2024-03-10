@@ -82,7 +82,6 @@ class Game:
                     # Revert changes if no improvement or outside ε range
                 elif new_utility <= current_utility and current_utility - new_utility > epsilon:  # Revert changes if no improvement or outside ε range
                     print(f"Attacker {attacker.attack_id} did not deviate from old utility: {current_utility}, to new utility: {new_utility}")
-                    print(f"Attacker {attacker.attack_id} did not converge, new strat MUCH WORSE, staying in game set")
                     attacker.update_strategy(current_strategy)
                     attacker.update_actual_utility(current_utility)
                     self.update_game_state(old_game_state)

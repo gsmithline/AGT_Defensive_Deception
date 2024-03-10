@@ -21,7 +21,7 @@ epsilon = 10
 game_rounds = 3
 num_attackers = 12
 num_targets = 10
-num_games = 10000
+num_games = 1000
 
 lambda_ranges = [(i/10, (i+1)/10) for i in range(10)]
 lambda_ranges.append((0, float('inf')) ) #no bounds
@@ -37,6 +37,7 @@ columns = ['Lambda Range', 'Game Number', 'Game Round', 'Price of Anarchy', 'Pot
            'Attacker Optimal Mixed Strategy Profile', 'Defender Utility', 'Defender Mixed Strategy', 'Percent System Working Optimally', 
            'Defender Best Response Utility', 'Defender Best Response Mixed Strategy', 'Distance Between Defender and Actual', 'Lambda Value']
 results = pd.DataFrame(columns=columns)
+new_rows = []
 for lambda_range in lambda_ranges:
    
     print(f"lambda range: {lambda_range}")
@@ -77,16 +78,20 @@ for lambda_range in lambda_ranges:
             print(game.best_potential_function_value)
             print(game.current_poa)
             
-            results = results.append({'Lambda Range': lambda_range, 'Game Number': l, 'Game Round': i, 
-                'Price of Anarchy': game.current_poa, 'Potential Function Value': game.actual_potential_function_value, 
-                'Optimal Potential Function Value': game.best_potential_function_value, 
-                'Attacker Mixed Strategy Profile': game.attacker_strategy_profile, "Attacker Optimal Mixed Strategy Profile": game.social_optimum_strategy,
-                'Defender Utility': defender.past_utilities[-1], 'Defender Mixed Strategy': defender.mixed_strategy, 
-                'Percent System Working Optimally': 1/game.current_poa, 'Defender Best Response Utility': defender.best_response_utilities[-1],
-                'Defender Best Response Mixed Strategy': defender.best_response_mixed_strategy, 
-                'Distance Between Defender and Actual': game.diff_in_utilities_defender[-1],
-                'Lambda Value': defender.lambda_value}, ignore_index=True)
+            new_row = {'Lambda Range': lambda_range, 'Game Number': l, 'Game Round': i, 
+                       'Price of Anarchy': game.current_poa, 'Potential Function Value': game.actual_potential_function_value, 
+                       'Optimal Potential Function Value': game.best_potential_function_value, 
+                       'Attacker Mixed Strategy Profile': game.attacker_strategy_profile, "Attacker Optimal Mixed Strategy Profile": game.social_optimum_strategy,
+                       'Defender Utility': defender.past_utilities[-1], 'Defender Mixed Strategy': defender.mixed_strategy, 
+                       'Percent System Working Optimally': 1/game.current_poa, 'Defender Best Response Utility': defender.best_response_utilities[-1],
+                       'Defender Best Response Mixed Strategy': defender.best_response_mixed_strategy, 
+                       'Distance Between Defender and Actual': game.diff_in_utilities_defender[-1],
+                       'Lambda Value': defender.lambda_value}
+            new_rows.append(new_row)
             
 
+if new_rows: 
+    new_rows_df = pd.DataFrame(new_rows)
+    results = pd.concat([results, new_rows_df], ignore_index=True)
 
-results.to_csv('results.csv')
+results.to_csv('results_1000_games.csv')
