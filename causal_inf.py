@@ -28,10 +28,12 @@ df_renamed = df.rename(columns={
     'Percent System Working Optimally': 'Percent_System_Working_Optimally',
     'Lambda Range': 'Lambda_Range',
     'Game Round': 'Game_Round',
-    'Defender Utility': 'Defender_Utility'
+    'Defender Utility': 'Defender_Utility',
+    'Price of Anarchy': 'Price_of_Anarchy',
+    'Lambda Value': 'Lambda_Value'
 })
 
-y, X = dmatrices('Percent_System_Working_Optimally ~ C(Lambda_Range) + C(Game_Round) + Defender_Utility', data=df_renamed, return_type='dataframe')
+y, X = dmatrices('Price_of_Anarchy ~ C(Defender_Utility) + + C(Lambda_Value) + C(Lambda_Range) + C(Game_Round)', data=df_renamed, return_type='dataframe')
 
 model = sm.OLS(y, X).fit()
 print(model.summary())
