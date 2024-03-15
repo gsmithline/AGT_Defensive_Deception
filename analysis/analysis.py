@@ -11,11 +11,11 @@ import sys
 np.random.seed(42)
 
 
-df = pd.read_csv('results_40_games.csv') 
+df = pd.read_csv('results_40_bottom_start_games.csv') 
 columns = df.columns
 #send print output to txt file
 original_stdout = sys.stdout
-with open('analysis2.txt', 'w') as f:
+with open('analysis3.txt', 'w') as f:
     sys.stdout = f
     
     '''

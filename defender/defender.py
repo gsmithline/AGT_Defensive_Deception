@@ -31,7 +31,7 @@ class Defender:
         self.best_response_mixed_strategy = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
         self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
-        self.lambda_value = self.lambda_max
+        self.lambda_value = self.lambda_min
         
     
     def update_lambda_value(self, observed_potentials):
