@@ -225,9 +225,8 @@ def plot_autocorrelation(df, metric_name, game_round_col='Game Round'):
         sm.graphics.tsa.plot_acf(lambda_df[metric_name], lags=20, title=f'Autocorrelation for {metric_name} - Lambda Range {lambda_range}')
     plt.show()
 
-        
-
-
+#results_40_bottom_start_games_4_round_games.csv
+# results_40_bottom_start_games.csv
 filepath = 'results_40_bottom_start_games.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
@@ -251,12 +250,14 @@ plot_4d_space_by_lambda_range(df)
 visualize_correlation_matrix(df)
 
 distribution_each_variable(df)
-'''
-
 # Example usage
 for feature in ['Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally', 'Potential Function Value']:
     plot_metric_trend(df, feature) # clearly defender does worse over time, the higher lambda is the better defender does.  
     plot_autocorrelation(df, feature)
+
+'''
+visualize_correlation_matrix(df)
+
 
 
 

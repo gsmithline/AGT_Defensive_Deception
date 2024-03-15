@@ -18,7 +18,7 @@ np.random.seed(42)
 num_targets = 12
 #random game set up 
 epsilon = 10
-game_rounds = 6
+game_rounds = 4
 num_attackers = 12
 num_targets = 10
 num_games = 40
@@ -94,4 +94,4 @@ if new_rows:
     new_rows_df = pd.DataFrame(new_rows)
     results = pd.concat([results, new_rows_df], ignore_index=True)
 
-results.to_csv('results_40_bottom_start_games_6_round_games.csv')
+results.to_csv('results_40_bottom_start_games_4_round_games.csv')
