@@ -30,7 +30,7 @@ class Defender:
         self.best_response_utilities = []
         self.best_response_mixed_strategy = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
-        self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
+        #self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
         self.lambda_value = self.lambda_min
         
     
@@ -70,7 +70,7 @@ class Defender:
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
         
-        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
+        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean() #sample mean
         self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
 
         self.past_lambda_values.append(self.lambda_value)

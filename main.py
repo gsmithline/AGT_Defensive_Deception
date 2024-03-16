@@ -21,7 +21,7 @@ epsilon = 10
 game_rounds = 4
 num_attackers = 12
 num_targets = 10
-num_games = 40
+num_games = 1000
 
 lambda_ranges = [(i/10, (i+1)/10) for i in range(10)]
 lambda_ranges.append((0, float('inf')) ) #no bounds
@@ -94,4 +94,4 @@ if new_rows:
     new_rows_df = pd.DataFrame(new_rows)
     results = pd.concat([results, new_rows_df], ignore_index=True)
 
-results.to_csv('results_40_bottom_start_games_4_round_games.csv')
+results.to_csv('results_1000_bottom_start_games_4_round_games.csv')

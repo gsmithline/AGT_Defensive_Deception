@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from patsy import dmatrices
 from linearmodels.panel import PanelOLS
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, kendalltau, pearsonr, spearmanr, kruskal, f_oneway
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -40,12 +40,21 @@ def ols_regression(df):
     model = sm.OLS(y, X).fit()
     return model
 
-def panel_data_analysis(df):
-    df['Game ID'] = df['Game Number'].astype(str) + '-' + df['Game Round'].astype(str)
-    panel_data = df.set_index(['Game ID', 'Game Round'])
-    panel_data['Lambda Range'] = panel_data['Lambda Range'].astype('category')
-    mod = PanelOLS.from_formula('`Percent System Working Optimally` ~ 1 + `Lambda Value` + `Defender Utility`+ EntityEffects', data=panel_data)
-    res = mod.fit(cov_type='clustered', cluster_entity=True)
+def panel_data_analysis(df, lambda_range_on=False):
+    if lambda_range_on:
+        for lambda_range in df['Lambda Range'].unique():
+            panel_data = df[df['Lambda Range'] == lambda_range].set_index(['Game Number', 'Game Round'])
+            panel_data['Lambda Range'] = panel_data['Lambda Range'].astype('category')
+            mod = PanelOLS.from_formula('`Price of Anarchy` ~ 1 + `Defender Utility` +  EntityEffects', data=panel_data)
+            res = mod.fit(cov_type='clustered', cluster_entity=True)
+            print(f'Lambda Range: {lambda_range}')
+            print(res)
+    else:
+        df['Game ID'] = df['Game Number'].astype(str) + '-' + df['Game Round'].astype(str)
+        panel_data = df.set_index(['Game ID', 'Game Round'])
+        panel_data['Lambda Range'] = panel_data['Lambda Range'].astype('category')
+        mod = PanelOLS.from_formula('`Price of Anarchy` ~ 1 + `Defender Utility` + EntityEffects', data=panel_data)
+        res = mod.fit(cov_type='clustered', cluster_entity=True)
     return res
 
 def visualize_aggregate_metrics(aggregate_metrics):
@@ -72,11 +81,16 @@ def perform_t_tests(df):
                 t_stat, p_val = ttest_ind(data1, data2)
                 print(f'T-test between {column1} and {column2} for Lambda Range {lamba_range}: T-stat={t_stat}, P-value={p_val}')
 
-def visualize_correlation_matrix(df):
-    for lamba_range in df['Lambda Range'].unique():
-        sns.heatmap(df[df['Lambda Range'] == lamba_range].corr(), annot=True)
-        plt.title(f'Correlation Matrix for {lamba_range}')
+def visualize_correlation_matrix(df, general_correlation=False):
+    if general_correlation == True:
+        sns.heatmap(df.corr(), annot=True)
+        plt.title('General Correlation Matrix')
         plt.show()
+    else:
+        for lamba_range in df['Lambda Range'].unique():
+            sns.heatmap(df[df['Lambda Range'] == lamba_range].corr(), annot=True)
+            plt.title(f'Correlation Matrix for {lamba_range}')
+            plt.show()
 
 def visualize_box_plot(df):
     for lamba_range in df['Lambda Range'].unique():
@@ -218,19 +232,146 @@ def plot_metric_trend(df, metric_name, game_round_col='Game Round'):
     plt.legend()
     plt.show()
 
-def plot_autocorrelation(df, metric_name, game_round_col='Game Round'):
+def plot_autocorrelation(df, metric_name, game_round_col='Game Round', general_correlation=False):
     plt.figure(figsize=(10, 6))
-    for lambda_range in df['Lambda Range'].unique():
-        lambda_df = df[df['Lambda Range'] == lambda_range]
-        sm.graphics.tsa.plot_acf(lambda_df[metric_name], lags=20, title=f'Autocorrelation for {metric_name} - Lambda Range {lambda_range}')
+    if general_correlation == False:
+        for lambda_range in df['Lambda Range'].unique():
+            lambda_df = df[df['Lambda Range'] == lambda_range]
+            sm.graphics.tsa.plot_acf(lambda_df[metric_name], lags=20, title=f'Autocorrelation for {metric_name} - Lambda Range {lambda_range}')
+    else:
+        sm.graphics.tsa.plot_acf(df[metric_name], lags=20, title=f'Autocorrelation for {metric_name}')
     plt.show()
+
+# Kendall Tau test
+def kendall_tau_test(df, column1, column2):
+    tau, p_value = kendalltau(df[column1], df[column2])
+    print(f"Kendall's tau between {column1} and {column2}: Tau={tau}, P-value={p_value}")
+
+# Pearson correlation test
+def pearson_correlation_test(df, column1, column2):
+    corr, p_value = pearsonr(df[column1], df[column2])
+    print(f"Pearson correlation between {column1} and {column2}: Correlation={corr}, P-value={p_value}")
+
+# Spearman rank test
+def spearman_rank_test(df, column1, column2):
+    coef, p_value = spearmanr(df[column1], df[column2])
+    print(f"Spearman rank correlation between {column1} and {column2}: Coefficient={coef}, P-value={p_value}")
+
+# Kruskal-Wallis test
+def kruskal_wallis_test(df, *columns):
+    data = [df[column] for column in columns]
+    stat, p_value = kruskal(*data)
+    print(f"Kruskal-Wallis test across {', '.join(columns)}: Statistic={stat}, P-value={p_value}")
+
+# ANOVA test
+def anova_test(df, *columns):
+    data = [df[column] for column in columns]
+    stat, p_value = f_oneway(*data)
+    print(f"ANOVA test across {', '.join(columns)}: Statistic={stat}, P-value={p_value}")
 
 #results_40_bottom_start_games_4_round_games.csv
 # results_40_bottom_start_games.csv
+    
+
+# Load and preprocess data
 filepath = 'results_40_bottom_start_games.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
+    
 '''
+Statisitcal Summary Tests
+'''
+#First general correlation
+'''
+NOTE:
+- In the general case we can see that there is not a super strong correlation between lambda, PoA
+and % system working optimally.
+- When we look at the range level we see a stronger correlation.  What's interesting is that 
+lambda has a strong negative correlation with game rounds, meaning as game rounds increase, lambda decreases (more bounded rationality).
+- We also see that as lambda increases, the price of anarchy increases, and the % system working optimally decreases.
+- Lambda is also strongly correlated with defender utility, meaning as lambda increases, defender utility increases.
+- We see defender utility is negatively correlated with game rounds, meaning it drops as game rounds increase.
+'''
+#visualize_correlation_matrix(df, general_correlation=False)
+'''
+NOTE: 
+- High p-values, one cna lower by increasing covariates 
+- Strong relationship between lambda and price of anarchy, and % system working optimally 
+'''
+#res = panel_data_analysis(df, True)
+#print(res)
+
+'''
+ANOVA
+'''
+#anova_test(df, 'Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally')
+
+'''
+Kruskal-Wallis
+Really just significant difference in means not much info, but it is statistically significant. 
+'''
+#kruskal_wallis_test(df, 'Price of Anarchy', 'Lambda Value', 'Percent System Working Optimally')
+
+'''
+Kendall Tau Test
+- Strong correlation and statistically significant at individual lambda range level
+- Again High lambda values we get NaN since it does not very much
+'''
+'''
+for lamba_range in df['Lambda Range'].unique():
+    print(f'Lambda Range: {lamba_range}')
+    kendall_tau_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
+'''
+'''
+Pearson Correlation Test
+- Strong correlations at Lambda level but not a higher up, all statistically significant
+- Negatively correlated with game round and labda together. 
+'''
+'''
+for lamba_range in df['Lambda Range'].unique():
+    print(f'Lambda Range: {lamba_range}')
+    pearson_correlation_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
+    pearson_correlation_test(df[df['Lambda Range'] == lamba_range], 'Lambda Value', 'Game Round')
+'''
+'''
+Spearman Rank Test
+- again high and statistically significant speearman rank correlation
+'''
+'''
+for lamba_range in df['Lambda Range'].unique():
+    print(f'Lambda Range: {lamba_range}')
+    spearman_rank_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
+'''
+'''
+Visualizations
+'''
+'''
+Aggregate Metrics
+'''
+#visualize_aggregate_metrics(aggregate_metrics)
+
+'''
+Correlation Matrix
+again strong correlation between lambda and price of anarchy, and % system working optimally
+- low correlation BUT HIGH IN OTHER correlations, migh not be a good fit. 
+'''
+'''
+for lamba_range in df['Lambda Range'].unique():
+    visualize_correlation_matrix(df, True)
+'''
+
+''' 
+Box Plot
+'''
+visualize_box_plot(df)
+
+
+
+
+
+
+'''
+
 model_summary = ols_regression(df).summary()
 print(model_summary)
 
@@ -249,14 +390,22 @@ changes_in_attacker_potential_function_value(df)
 plot_4d_space_by_lambda_range(df)
 visualize_correlation_matrix(df)
 
+
+
+
+
+
 distribution_each_variable(df)
 # Example usage
 for feature in ['Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally', 'Potential Function Value']:
     plot_metric_trend(df, feature) # clearly defender does worse over time, the higher lambda is the better defender does.  
     plot_autocorrelation(df, feature)
 
-'''
+
+distribution_each_variable(df)
+
 visualize_correlation_matrix(df)
+'''
 
 
 
