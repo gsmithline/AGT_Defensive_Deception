@@ -362,8 +362,13 @@ for lamba_range in df['Lambda Range'].unique():
 
 ''' 
 Box Plot
+Mean PoA across the board is at 2.0, which is about 50% of the system working optimally.
 '''
-visualize_box_plot(df)
+#visualize_box_plot(df)
+'''
+Plot 4d Space by Lambda Range
+'''
+plot_4d_space_by_lambda_range(df)
 
 
 
