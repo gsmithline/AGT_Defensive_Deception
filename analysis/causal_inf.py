@@ -368,7 +368,29 @@ Mean PoA across the board is at 2.0, which is about 50% of the system working op
 '''
 Plot 4d Space by Lambda Range
 '''
-plot_4d_space_by_lambda_range(df)
+#plot_4d_space_by_lambda_range(df)
+
+'''
+Price of Anarchy by Lambda Range
+Basic linear relationships
+'''
+'''
+changes_in_defender_utility(df)
+changes_in_percent_system_working_optimally(df)
+changes_in_price_of_anarchy(df)
+changes_in_attacker_potential_function_value(df)
+'''
+'''
+PDF
+mostly follow bimodal distribution
+'''
+#distribution_each_variable(df)
+'''
+Trend Line
+'''
+for feature in ['Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally', 'Potential Function Value']:
+    plot_metric_trend(df, feature) # clearly defender does worse over time, the higher lambda is the better defender does.  
+    plot_autocorrelation(df, feature)
 
 
 
