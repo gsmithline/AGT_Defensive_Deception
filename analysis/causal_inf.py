@@ -272,9 +272,9 @@ def anova_test(df, *columns):
 #results_40_bottom_start_games_4_round_games.csv
 # results_40_bottom_start_games.csv
     
-
+# results_1000_bottom_start_games_4_round_games.csv
 # Load and preprocess data
-filepath = 'results_40_bottom_start_games.csv'  # Adjust this to your file path
+filepath = 'results_1000_bottom_start_games_4_round_games.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
     
@@ -292,99 +292,97 @@ lambda has a strong negative correlation with game rounds, meaning as game round
 - Lambda is also strongly correlated with defender utility, meaning as lambda increases, defender utility increases.
 - We see defender utility is negatively correlated with game rounds, meaning it drops as game rounds increase.
 '''
-#visualize_correlation_matrix(df, general_correlation=False)
+visualize_correlation_matrix(df, general_correlation=False)
 '''
 NOTE: 
 - High p-values, one cna lower by increasing covariates 
 - Strong relationship between lambda and price of anarchy, and % system working optimally 
 '''
-#res = panel_data_analysis(df, True)
-#print(res)
+res = panel_data_analysis(df, True)
+print(res)
 
 '''
 ANOVA
 '''
-#anova_test(df, 'Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally')
+anova_test(df, 'Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally')
 
 '''
 Kruskal-Wallis
 Really just significant difference in means not much info, but it is statistically significant. 
 '''
-#kruskal_wallis_test(df, 'Price of Anarchy', 'Lambda Value', 'Percent System Working Optimally')
+kruskal_wallis_test(df, 'Price of Anarchy', 'Lambda Value', 'Percent System Working Optimally')
 
 '''
 Kendall Tau Test
 - Strong correlation and statistically significant at individual lambda range level
 - Again High lambda values we get NaN since it does not very much
 '''
-'''
+
 for lamba_range in df['Lambda Range'].unique():
     print(f'Lambda Range: {lamba_range}')
     kendall_tau_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
-'''
+
 '''
 Pearson Correlation Test
 - Strong correlations at Lambda level but not a higher up, all statistically significant
 - Negatively correlated with game round and labda together. 
 '''
-'''
+
 for lamba_range in df['Lambda Range'].unique():
     print(f'Lambda Range: {lamba_range}')
     pearson_correlation_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
     pearson_correlation_test(df[df['Lambda Range'] == lamba_range], 'Lambda Value', 'Game Round')
-'''
+
 '''
 Spearman Rank Test
 - again high and statistically significant speearman rank correlation
 '''
-'''
+
 for lamba_range in df['Lambda Range'].unique():
     print(f'Lambda Range: {lamba_range}')
     spearman_rank_test(df[df['Lambda Range'] == lamba_range], 'Price of Anarchy', 'Lambda Value')
-'''
-'''
-Visualizations
-'''
+
+
 '''
 Aggregate Metrics
 '''
-#visualize_aggregate_metrics(aggregate_metrics)
+visualize_aggregate_metrics(aggregate_metrics)
 
 '''
 Correlation Matrix
 again strong correlation between lambda and price of anarchy, and % system working optimally
 - low correlation BUT HIGH IN OTHER correlations, migh not be a good fit. 
 '''
-'''
+
 for lamba_range in df['Lambda Range'].unique():
     visualize_correlation_matrix(df, True)
-'''
+
 
 ''' 
 Box Plot
 Mean PoA across the board is at 2.0, which is about 50% of the system working optimally.
 '''
-#visualize_box_plot(df)
+visualize_box_plot(df)
 '''
 Plot 4d Space by Lambda Range
 '''
-#plot_4d_space_by_lambda_range(df)
+plot_4d_space_by_lambda_range(df)
 
 '''
 Price of Anarchy by Lambda Range
 Basic linear relationships
 '''
-'''
+
 changes_in_defender_utility(df)
 changes_in_percent_system_working_optimally(df)
 changes_in_price_of_anarchy(df)
 changes_in_attacker_potential_function_value(df)
-'''
+
 '''
 PDF
 mostly follow bimodal distribution
 '''
-#distribution_each_variable(df)
+distribution_each_variable(df)
 '''
 Trend Line
 '''

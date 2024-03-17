@@ -19,6 +19,8 @@ class Defender:
         self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1
+        self.alpha = 0.1
+        self.rationality_bias_factory = 3
         self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
@@ -71,6 +73,8 @@ class Defender:
         self.lambda_scale = updated_scale
         
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean() #sample mean
+        self.lambda_value = (1-self.alpha) * self.lambda_value + self.alpha * new_lambda
+        
         self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
 
         self.past_lambda_values.append(self.lambda_value)
