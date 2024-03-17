@@ -273,8 +273,11 @@ def anova_test(df, *columns):
 # results_40_bottom_start_games.csv
     
 # results_1000_bottom_start_games_4_round_games.csv
+# linear_increasing_alpha.csv
 # Load and preprocess data
-filepath = 'results_1000_bottom_start_games_4_round_games.csv'  # Adjust this to your file path
+# analysis/rationality_bias_factor_stationairy_lambda.csv
+# analysis/linear_increasing_alpha.csv
+filepath = 'analysis/rationality_bias_factor_stationairy_lambda.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
     
@@ -389,48 +392,6 @@ Trend Line
 for feature in ['Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally', 'Potential Function Value']:
     plot_metric_trend(df, feature) # clearly defender does worse over time, the higher lambda is the better defender does.  
     plot_autocorrelation(df, feature)
-
-
-
-
-
-
-'''
-
-model_summary = ols_regression(df).summary()
-print(model_summary)
-
-res = panel_data_analysis(df)
-print(res)
-visualize_aggregate_metrics(aggregate_metrics)
-visualize_price_of_anarchy(df)
-perform_t_tests(df)
-visualize_correlation_matrix(df)
-visualize_box_plot(df)
-visualize_price_of_anarchy_by_lambda_range(df)
-changes_in_defender_utility(df)
-changes_in_percent_system_working_optimally(df)
-changes_in_price_of_anarchy(df)
-changes_in_attacker_potential_function_value(df)
-plot_4d_space_by_lambda_range(df)
-visualize_correlation_matrix(df)
-
-
-
-
-
-
-distribution_each_variable(df)
-# Example usage
-for feature in ['Price of Anarchy', 'Defender Utility', 'Percent System Working Optimally', 'Potential Function Value']:
-    plot_metric_trend(df, feature) # clearly defender does worse over time, the higher lambda is the better defender does.  
-    plot_autocorrelation(df, feature)
-
-
-distribution_each_variable(df)
-
-visualize_correlation_matrix(df)
-'''
 
 
 
