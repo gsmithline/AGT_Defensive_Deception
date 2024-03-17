@@ -19,8 +19,6 @@ class Defender:
         self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1
-        self.alpha = 0.1
-        self.rationality_bias_factor = .2
         self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
@@ -36,7 +34,7 @@ class Defender:
         self.lambda_value = self.lambda_min
         
     
-    def update_lambda_value(self, observed_potentials, current_round, total_rounds):
+    def update_lambda_value(self, observed_potentials):
         # Bayesian updating of lambda based on observed potentials
         ''''
         def likelihood_function(lambda_value):
@@ -71,18 +69,8 @@ class Defender:
             self.lambda_bayes = 1
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-        #linear did not work
-        #self.alpha = 0.1 + (current_round / total_rounds) * (0.9 - 0.1)
-
-
+        
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean() #sample mean
-        #linear did not work
-        #self.lambda_value = (1-self.alpha) * self.lambda_value + self.alpha * new_lambda
-        forgetting_factor = 1 + self.rationality_bias_factor * (current_round / total_rounds)
-
-        # Update lambda_value by blending the previous lambda_value with the new_lambda, adjusted by the forgetting factor
-        self.lambda_value = (1 - self.alpha) * self.lambda_value + self.alpha * new_lambda * forgetting_factor
-
         self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
 
         self.past_lambda_values.append(self.lambda_value)
@@ -216,5 +204,3 @@ class Defender:
         past_lambdas = self.past_lambda_values
         sns.kdeplot(past_lambdas, fill=True)
         plt.show()
-
-

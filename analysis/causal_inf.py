@@ -277,7 +277,10 @@ def anova_test(df, *columns):
 # Load and preprocess data
 # analysis/rationality_bias_factor_stationairy_lambda.csv
 # analysis/linear_increasing_alpha.csv
-filepath = 'analysis/rationality_bias_factor_stationairy_lambda.csv'  # Adjust this to your file path
+# analysis/shift_distribution_simple_increase.csv
+# analysis/change_strat.csv
+# analysis/using_poa_as_feature.csv
+filepath = 'analysis/using_poa_as_feature.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
     

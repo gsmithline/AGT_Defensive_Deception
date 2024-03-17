@@ -23,7 +23,10 @@ class Game:
         self.current_poa = None
         self.social_optimum_strategy = None
         self.best_potential_function_value = None
+        self.percent_system_working_optimally = []
         self.diff_in_utilities_defender = []
+        self.current_composite_score = None
+        self.composite_score = []
 
 
     def update_game_state(self, new_game_state):
@@ -145,6 +148,8 @@ class Game:
 
     
     def price_of_anarchy(self):
+        alpha = .5
+        beta = .5
         #computes price of anarchy for the attackers for the game
         #this happens after each round and we have perfect information of the game
         computed_poa = self.actual_potential_function_value
@@ -161,7 +166,10 @@ class Game:
         '''
         poa = self.best_potential_function_value / computed_poa 
         self.past_poa.append(poa)
+        self.percent_system_working_optimally.append(1/poa)
         self.current_poa = poa
+        self.current_composite_score = alpha * self.percent_system_working_optimally[-1] + beta * self.actual_potential_function_value # composite score for learning
+        self.composite_score.append(self.current_composite_score)
 
   
 
