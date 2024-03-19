@@ -19,7 +19,7 @@ class Defender:
         self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1
-        self.learning_rate = 0.9
+        self.learning_rate = 0
         self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
@@ -56,9 +56,10 @@ class Defender:
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         updated_shape = 0
+        self.learning_rate =  1 - current_round / total_rounds
         adjustment_factor = 1 + (current_round / total_rounds) * self.learning_rate
         if self.gamma_distribution:
-            updated_shape = self.lambda_shape + len(observed_potentials)
+            updated_shape = self.lambda_shape + len(observed_potentials) * adjustment_factor
         else: #keep shape at 1 or below
             updated_shape = max(0, min(1, self.lambda_shape + len(observed_potentials)))
         updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
