@@ -56,8 +56,7 @@ for lambda_range in lambda_ranges:
         
         for i in range(1, game_rounds + 1):
             #update lambda
-            #defender.update_lambda_value(list(game.past_potential_function_values.values()), current_round=i, total_rounds=game_rounds)
-            defender.update_lambda_value(list(game.composite_score))
+            defender.update_lambda_value(list(game.past_potential_function_values.values()), current_round=i, total_rounds=game_rounds)
             print(f"lambda value updated: {defender.lambda_value}")
             #test qr defender 
             defender.quantal_response(defender.lambda_value, game)

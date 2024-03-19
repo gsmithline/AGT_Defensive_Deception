@@ -19,6 +19,7 @@ class Defender:
         self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1
+        self.learning_rate = 0.9
         self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
@@ -34,7 +35,7 @@ class Defender:
         self.lambda_value = self.lambda_min
         
     
-    def update_lambda_value(self, observed_potentials):
+    def update_lambda_value(self, observed_potentials, current_round, total_rounds):
         # Bayesian updating of lambda based on observed potentials
         ''''
         def likelihood_function(lambda_value):
@@ -55,22 +56,12 @@ class Defender:
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         updated_shape = 0
-        delta = .3
+        adjustment_factor = 1 + (current_round / total_rounds) * self.learning_rate
         if self.gamma_distribution:
-            if len(observed_potentials) == 0:
-                #c_value = observed_potentials[-1]
-                updated_shape = self.lambda_shape + len(observed_potentials) + self.lambda_shape * delta
-            else:
-                c_value = observed_potentials[-1]
-                updated_shape =  self.lambda_shape + delta * c_value
-            #updated_shape = self.lambda_shape + len(observed_potentials)
+            updated_shape = self.lambda_shape + len(observed_potentials)
         else: #keep shape at 1 or below
             updated_shape = max(0, min(1, self.lambda_shape + len(observed_potentials)))
-        #updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
-        if len(observed_potentials) == 0:
-            updated_scale = self.lambda_scale + self.lambda_scale * delta
-        else:
-            updated_scale = self.lambda_scale + delta * np.sum(observed_potentials)
+        updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
         if self.probability_distribution:
             if self.gamma_distribution:
                 self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)
@@ -80,9 +71,14 @@ class Defender:
             self.lambda_bayes = 1
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-        
-        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean() #sample mean
-        self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
+
+        if expected_lambda > 0:
+            new_lambda = max(self.lambda_bayes.ppf(0.99), expected_lambda / normalization_factor)  # ppf(0.99) approximates the maximum
+        else:
+            new_lambda = self.lambda_bayes.mean()
+        self.lambda_value = new_lambda
+        self.lambda_value = min(max(self.lambda_value * adjustment_factor, self.lambda_min), self.lambda_max)
+
 
         self.past_lambda_values.append(self.lambda_value)
         return self.lambda_value
