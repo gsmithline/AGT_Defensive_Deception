@@ -55,11 +55,22 @@ class Defender:
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         updated_shape = 0
+        delta = .3
         if self.gamma_distribution:
-            updated_shape = self.lambda_shape + len(observed_potentials)
+            if len(observed_potentials) == 0:
+                #c_value = observed_potentials[-1]
+                updated_shape = self.lambda_shape + len(observed_potentials) + self.lambda_shape * delta
+            else:
+                c_value = observed_potentials[-1]
+                updated_shape =  self.lambda_shape + delta * c_value
+            #updated_shape = self.lambda_shape + len(observed_potentials)
         else: #keep shape at 1 or below
             updated_shape = max(0, min(1, self.lambda_shape + len(observed_potentials)))
-        updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
+        #updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
+        if len(observed_potentials) == 0:
+            updated_scale = self.lambda_scale + self.lambda_scale * delta
+        else:
+            updated_scale = self.lambda_scale + delta * np.sum(observed_potentials)
         if self.probability_distribution:
             if self.gamma_distribution:
                 self.lambda_bayes = gamma(a=updated_shape, scale=updated_scale)

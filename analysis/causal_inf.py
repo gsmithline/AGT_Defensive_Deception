@@ -280,7 +280,8 @@ def anova_test(df, *columns):
 # analysis/shift_distribution_simple_increase.csv
 # analysis/change_strat.csv
 # analysis/using_poa_as_feature.csv
-filepath = 'analysis/using_poa_as_feature.csv'  # Adjust this to your file path
+# analysis/using_composite_of_PSWO_Potential.csv
+filepath = 'analysis/using_composite_of_PSWO_Potential.csv'  # Adjust this to your file path
 df = load_and_preprocess_data(filepath)
 aggregate_metrics = aggregate_metrics_by_lambda(df)
     

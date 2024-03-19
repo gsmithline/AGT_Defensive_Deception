@@ -148,8 +148,8 @@ class Game:
 
     
     def price_of_anarchy(self):
-        alpha = .5
-        beta = .5
+        alpha = .7
+        beta = .3
         #computes price of anarchy for the attackers for the game
         #this happens after each round and we have perfect information of the game
         computed_poa = self.actual_potential_function_value
