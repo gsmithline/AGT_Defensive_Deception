@@ -19,7 +19,6 @@ class Defender:
         self.gamma_distribution = gamma_distribution    
         self.lambda_shape = 1  # Shape parameter (a) for the gamma distribution
         self.lambda_scale = 1
-        self.learning_rate = 0
         self.probability_distribution = probability_distribution  # Scale parameter for the gamma distribution
         if gamma_distribution:
             self.lambda_bayes = gamma(a=self.lambda_shape, scale=self.lambda_scale)
@@ -31,11 +30,11 @@ class Defender:
         self.best_response_utilities = []
         self.best_response_mixed_strategy = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
-        #self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
+        self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
         self.lambda_value = self.lambda_min
         
     
-    def update_lambda_value(self, observed_potentials, current_round, total_rounds):
+    def update_lambda_value(self, observed_potentials):
         # Bayesian updating of lambda based on observed potentials
         ''''
         def likelihood_function(lambda_value):
@@ -56,10 +55,8 @@ class Defender:
         expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         updated_shape = 0
-        self.learning_rate =  1 - current_round / total_rounds
-        adjustment_factor = 1 + (current_round / total_rounds) * self.learning_rate
         if self.gamma_distribution:
-            updated_shape = self.lambda_shape + len(observed_potentials) * adjustment_factor
+            updated_shape = self.lambda_shape + len(observed_potentials)
         else: #keep shape at 1 or below
             updated_shape = max(0, min(1, self.lambda_shape + len(observed_potentials)))
         updated_scale = 1 / (1 / self.lambda_scale + np.sum(observed_potentials)) 
@@ -72,14 +69,9 @@ class Defender:
             self.lambda_bayes = 1
         self.lambda_shape = updated_shape
         self.lambda_scale = updated_scale
-
-        if expected_lambda > 0:
-            new_lambda = max(self.lambda_bayes.ppf(0.99), expected_lambda / normalization_factor)  # ppf(0.99) approximates the maximum
-        else:
-            new_lambda = self.lambda_bayes.mean()
-        self.lambda_value = new_lambda
-        self.lambda_value = min(max(self.lambda_value * adjustment_factor, self.lambda_min), self.lambda_max)
-
+        
+        new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
+        self.lambda_value = max(min(new_lambda, self.lambda_max), self.lambda_min) 
 
         self.past_lambda_values.append(self.lambda_value)
         return self.lambda_value
