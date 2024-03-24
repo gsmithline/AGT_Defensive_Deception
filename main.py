@@ -21,7 +21,7 @@ epsilon = 10
 game_rounds = 4
 num_attackers = 12
 num_targets = 10
-num_games = 100
+num_games = 20
 
 #lambda_ranges = [(i/10, (i+1)/10) for i in range(10)]
 lambda_ranges = [(i/10, (i/10) + 0.2) for i in range(0, 10, 2)]
@@ -58,8 +58,10 @@ for lambda_range in lambda_ranges:
         for i in range(1, game_rounds + 1):
             #update lambda
             if i > 1:
-                defender.update_lambda_value(list(game.past_potential_function_values.values()))
+                defender.update_lambda_value(list(game.composite_score))
                 #defender.update_lambda_value(game.percent_system_working_optimally, current_round=i, total_rounds=game_rounds)
+            else:
+                defender.past_lambda_values.append(defender.lambda_value)
             print(f"lambda value updated: {defender.lambda_value}")
             
             #test qr defender 
@@ -81,7 +83,15 @@ for lambda_range in lambda_ranges:
             game.price_of_anarchy()
             print(game.best_potential_function_value)
             print(game.current_poa)
-            
+            diff = 0
+            if i > 1:
+                first = defender.past_lambda_values[-1]
+                second = defender.past_lambda_values[-2]
+                diff = abs(first - second)
+
+
+
+
             new_row = {'Lambda Range': lambda_range, 'Game Number': l, 'Game Round': i, 
                        'Price of Anarchy': game.current_poa, 'Potential Function Value': game.actual_potential_function_value, 
                        'Optimal Potential Function Value': game.best_potential_function_value, 
@@ -90,7 +100,8 @@ for lambda_range in lambda_ranges:
                        'Percent System Working Optimally': 1/game.current_poa, 'Defender Best Response Utility': defender.best_response_utilities[-1],
                        'Defender Best Response Mixed Strategy': defender.best_response_mixed_strategy, 
                        'Distance Between Defender and Actual': game.diff_in_utilities_defender[-1],
-                       'Lambda Value': defender.lambda_value, 'Composite Score': game.current_composite_score}
+                       'Lambda Value': defender.lambda_value, 'Composite Score': game.current_composite_score,
+                       'Lambda Difference': diff}
             new_rows.append(new_row)
             
 

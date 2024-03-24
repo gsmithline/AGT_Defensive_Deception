@@ -31,7 +31,10 @@ class Defender:
         self.best_response_mixed_strategy = []
         self.lambda_min, self.lambda_max = lambda_range  # Set bounds for lambda
         self.lambda_value = random.uniform(self.lambda_min, self.lambda_max) 
-        self.lambda_value = self.lambda_min
+        if self.lambda_max == float('inf'):
+            self.lambda_value = np.mean([self.lambda_min, 10])
+        else:
+            self.lambda_value = np.mean([self.lambda_min, self.lambda_max])
         
     
     def update_lambda_value(self, observed_potentials):
@@ -52,7 +55,7 @@ class Defender:
         
         normalization_factor, _ = quad(full_bayesian_fraction, 0, 1) #ensures posterior sums to 1
            
-        expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), 0, 1)
+        expected_lambda, _ = quad(lambda x: x * full_bayesian_fraction(x), self.lambda_min, self.lambda_max)
         new_lambda = (expected_lambda / normalization_factor) if expected_lambda > 0 else self.lambda_bayes.mean()
         updated_shape = 0
         if self.gamma_distribution:
